@@ -1,5 +1,6 @@
 import { Search, User, Wallet, ShoppingCart, LogOut, Package, MapPin, Heart, Bell, ChevronDown } from "lucide-react";
 import { useState, useRef, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -8,6 +9,7 @@ const SearchBar = () => {
   const { user, profile, signOut } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const mobileButtonRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [dropdownPos, setDropdownPos] = useState({ top: 0, right: 0 });
 
@@ -15,20 +17,23 @@ const SearchBar = () => {
   const isLoggedIn = !!user;
 
   const updatePosition = useCallback(() => {
-    if (buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect();
+    const activeBtn = buttonRef.current || mobileButtonRef.current;
+    if (activeBtn) {
+      const rect = activeBtn.getBoundingClientRect();
       setDropdownPos({
         top: rect.bottom + 8,
-        right: window.innerWidth - rect.right,
+        right: Math.max(8, window.innerWidth - rect.right),
       });
     }
   }, []);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Node;
       if (
-        dropdownRef.current && !dropdownRef.current.contains(e.target as Node) &&
-        buttonRef.current && !buttonRef.current.contains(e.target as Node)
+        dropdownRef.current && !dropdownRef.current.contains(target) &&
+        buttonRef.current && !buttonRef.current.contains(target) &&
+        mobileButtonRef.current && !mobileButtonRef.current.contains(target)
       ) {
         setDropdownOpen(false);
       }
@@ -57,36 +62,39 @@ const SearchBar = () => {
     { icon: Bell, label: "Notifications", action: () => navigate("/customer/profile?tab=notifications") },
   ];
 
-  const DropdownMenu = () => (
-    <div
-      ref={dropdownRef}
-      className="fixed w-56 rounded-lg border bg-card shadow-lg py-2 animate-in fade-in slide-in-from-top-2 duration-200"
-      style={{ top: dropdownPos.top, right: dropdownPos.right, zIndex: 9999 }}
-    >
-      <div className="px-4 py-2 border-b mb-1">
-        <p className="text-sm font-semibold">Your Account</p>
-      </div>
-      {menuItems.map((item) => (
-        <button
-          key={item.label}
-          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-          onClick={() => { item.action(); setDropdownOpen(false); }}
+  const dropdownPortal = dropdownOpen && isLoggedIn
+    ? createPortal(
+        <div
+          ref={dropdownRef}
+          className="fixed w-56 rounded-lg border bg-card shadow-lg py-2 animate-in fade-in slide-in-from-top-2 duration-200"
+          style={{ top: dropdownPos.top, right: dropdownPos.right, zIndex: 9999 }}
         >
-          <item.icon className="h-4 w-4" />
-          {item.label}
-        </button>
-      ))}
-      <div className="border-t mt-1 pt-1">
-        <button
-          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-destructive hover:bg-destructive/10 transition-colors"
-          onClick={async () => { await signOut(); navigate("/"); setDropdownOpen(false); }}
-        >
-          <LogOut className="h-4 w-4" />
-          Logout
-        </button>
-      </div>
-    </div>
-  );
+          <div className="px-4 py-2 border-b mb-1">
+            <p className="text-sm font-semibold">Your Account</p>
+          </div>
+          {menuItems.map((item) => (
+            <button
+              key={item.label}
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+              onClick={() => { item.action(); setDropdownOpen(false); }}
+            >
+              <item.icon className="h-4 w-4" />
+              {item.label}
+            </button>
+          ))}
+          <div className="border-t mt-1 pt-1">
+            <button
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-destructive hover:bg-destructive/10 transition-colors"
+              onClick={async () => { await signOut(); navigate("/"); setDropdownOpen(false); }}
+            >
+              <LogOut className="h-4 w-4" />
+              Logout
+            </button>
+          </div>
+        </div>,
+        document.body
+      )
+    : null;
 
   return (
     <div className="border-b bg-card">
@@ -104,20 +112,17 @@ const SearchBar = () => {
         {/* Actions - desktop */}
         <div className="hidden items-center gap-1 sm:flex">
           {isLoggedIn ? (
-            <>
-              <button
-                ref={buttonRef}
-                onClick={() => setDropdownOpen(!dropdownOpen)}
-                className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
-              >
-                <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20">
-                  <User className="h-3.5 w-3.5 text-primary" />
-                </div>
-                <span className="max-w-[120px] truncate">{displayName}</span>
-                <ChevronDown className={`h-3.5 w-3.5 transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
-              </button>
-              {dropdownOpen && <DropdownMenu />}
-            </>
+            <button
+              ref={buttonRef}
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+              className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+            >
+              <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20">
+                <User className="h-3.5 w-3.5 text-primary" />
+              </div>
+              <span className="max-w-[120px] truncate">{displayName}</span>
+              <ChevronDown className={`h-3.5 w-3.5 transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
+            </button>
           ) : (
             <button onClick={() => navigate("/customer/login")} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted">
               <User className="h-4 w-4" />
@@ -137,7 +142,7 @@ const SearchBar = () => {
         {/* Actions - mobile icons only */}
         <div className="flex items-center gap-2 sm:hidden">
           <button
-            ref={!dropdownOpen ? undefined : buttonRef}
+            ref={mobileButtonRef}
             onClick={() => {
               if (isLoggedIn) setDropdownOpen(!dropdownOpen);
               else navigate("/customer/login");
@@ -147,12 +152,14 @@ const SearchBar = () => {
           >
             <User className="h-5 w-5" />
           </button>
-          {isLoggedIn && dropdownOpen && <DropdownMenu />}
           <button onClick={() => navigate("/cart")} className="rounded-lg p-2 text-foreground hover:bg-muted" aria-label="Cart">
             <ShoppingCart className="h-5 w-5" />
           </button>
         </div>
       </div>
+
+      {/* Portal-rendered dropdown */}
+      {dropdownPortal}
     </div>
   );
 };
