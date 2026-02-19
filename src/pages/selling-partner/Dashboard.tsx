@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Package, Plus, LogOut, Store, ShoppingCart, Wallet, Star, PackagePlus, Pencil, BarChart3, TrendingUp, MapPin, ArrowDownLeft } from "lucide-react";
+import { Package, Plus, LogOut, Store, ShoppingCart, Wallet, Star, PackagePlus, Pencil, BarChart3, TrendingUp, MapPin, ArrowDownLeft, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import ImageUpload from "@/components/admin/ImageUpload";
 import logo from "@/assets/logo.png";
@@ -26,6 +26,7 @@ interface SellerProduct {
   is_approved: boolean;
   is_active: boolean;
   is_featured: boolean;
+  coming_soon: boolean;
   stock: number;
   area_godown_id: string | null;
   image_url: string | null;
@@ -451,6 +452,11 @@ const SellingPartnerDashboard = () => {
                           <p className="font-medium text-foreground">{p.name}</p>
                           {p.is_featured && <Star className="h-3.5 w-3.5 text-yellow-500 fill-yellow-500" />}
                           {!p.is_active && <Badge variant="outline" className="text-xs">Inactive</Badge>}
+                          {p.coming_soon && (
+                            <Badge className="bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300 border-0 gap-1 text-[10px]">
+                              <Clock className="h-3 w-3" /> Coming Soon
+                            </Badge>
+                          )}
                         </div>
                         <p className="text-sm text-muted-foreground">₹{p.price} · MRP: ₹{p.mrp} · Stock: {p.stock}</p>
                       </div>

@@ -1,0 +1,1 @@
+ALTER TABLE public.seller_products ADD COLUMN IF NOT EXISTS coming_soon boolean NOT NULL DEFAULT false;

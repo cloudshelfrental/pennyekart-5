@@ -33,6 +33,7 @@ interface SellerProduct {
   is_active: boolean;
   is_approved: boolean;
   is_featured: boolean;
+  coming_soon: boolean;
   category: string | null;
   image_url: string | null;
   seller_id: string;
@@ -74,7 +75,7 @@ const ProductsPage = () => {
   const fetchSellerProducts = async () => {
     const { data } = await supabase
       .from("seller_products")
-      .select("id, name, price, mrp, stock, is_active, is_approved, is_featured, category, image_url, seller_id, created_at")
+      .select("id, name, price, mrp, stock, is_active, is_approved, is_featured, coming_soon, category, image_url, seller_id, created_at")
       .order("created_at", { ascending: false });
     setSellerProducts((data as SellerProduct[]) ?? []);
   };
@@ -118,6 +119,14 @@ const ProductsPage = () => {
     const { error } = await supabase.from("seller_products").update({ is_approved: !p.is_approved }).eq("id", p.id);
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     toast({ title: `Product ${!p.is_approved ? "approved" : "unapproved"}` });
+    fetchSellerProducts();
+  };
+
+  const toggleSellerComingSoon = async (p: SellerProduct) => {
+    const newVal = !p.coming_soon;
+    const { error } = await supabase.from("seller_products").update({ coming_soon: newVal } as any).eq("id", p.id);
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+    toast({ title: newVal ? "Marked as Coming Soon" : "Coming Soon removed" });
     fetchSellerProducts();
   };
 
@@ -290,6 +299,7 @@ const ProductsPage = () => {
                   <TableHead>Active</TableHead>
                   <TableHead>Approval</TableHead>
                   <TableHead>Featured</TableHead>
+                  <TableHead>Coming Soon</TableHead>
                   <TableHead className="w-28">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -315,6 +325,20 @@ const ProductsPage = () => {
                       {p.is_featured ? <Badge className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 border-0">Featured</Badge> : "—"}
                     </TableCell>
                     <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          checked={p.coming_soon}
+                          onCheckedChange={() => toggleSellerComingSoon(p)}
+                          className="scale-90"
+                        />
+                        {p.coming_soon && (
+                          <Badge className="bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300 border-0 gap-1 text-[10px]">
+                            <Clock className="h-3 w-3" /> Soon
+                          </Badge>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
                       <Button
                         variant={p.is_approved ? "outline" : "default"}
                         size="sm"
@@ -326,7 +350,7 @@ const ProductsPage = () => {
                   </TableRow>
                 ))}
                 {sellerProducts.length === 0 && (
-                  <TableRow><TableCell colSpan={9} className="py-8 text-center text-muted-foreground">No seller products found.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={10} className="py-8 text-center text-muted-foreground">No seller products found.</TableCell></TableRow>
                 )}
               </TableBody>
             </Table>
