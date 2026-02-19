@@ -798,6 +798,7 @@ export type Database = {
         Row: {
           area_godown_id: string | null
           category: string | null
+          coming_soon: boolean
           created_at: string
           description: string | null
           discount_rate: number
@@ -820,6 +821,7 @@ export type Database = {
         Insert: {
           area_godown_id?: string | null
           category?: string | null
+          coming_soon?: boolean
           created_at?: string
           description?: string | null
           discount_rate?: number
@@ -842,6 +844,7 @@ export type Database = {
         Update: {
           area_godown_id?: string | null
           category?: string | null
+          coming_soon?: boolean
           created_at?: string
           description?: string | null
           discount_rate?: number
