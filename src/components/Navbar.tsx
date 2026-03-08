@@ -61,6 +61,16 @@ const Navbar = () => {
         </ul>
 
         <div className="flex items-center gap-4">
+          {user && walletBalance !== null && (
+            <button
+              className="flex items-center gap-1 text-foreground hover:text-primary transition-colors"
+              onClick={() => navigate("/customer/wallet")}
+              aria-label="Wallet"
+            >
+              <Wallet className="h-4.5 w-4.5 text-emerald-600" />
+              <span className="text-xs font-bold text-emerald-600">₹{walletBalance}</span>
+            </button>
+          )}
           <button className="relative text-foreground" aria-label="Cart" onClick={() => navigate("/cart")}>
             <ShoppingCart className="h-5 w-5" />
           </button>
