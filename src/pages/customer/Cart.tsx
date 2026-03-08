@@ -34,6 +34,7 @@ const Cart = () => {
   const [walletBalance, setWalletBalance] = useState(0);
   const [walletId, setWalletId] = useState<string | null>(null);
   const [walletMinUsage, setWalletMinUsage] = useState(0);
+  const [walletMaxRedeem, setWalletMaxRedeem] = useState<number | null>(null);
 
   // Load saved address and wallet
   useEffect(() => {
