@@ -54,6 +54,7 @@ import Cart from "./pages/customer/Cart";
 import CustomerProfile from "./pages/customer/Profile";
 import CustomerWallet from "./pages/customer/Wallet";
 import PlayVideos from "./pages/customer/PlayVideos";
+import CategoryProducts from "./pages/customer/CategoryProducts";
 
 const queryClient = new QueryClient();
 
