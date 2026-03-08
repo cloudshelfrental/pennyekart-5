@@ -4,9 +4,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, MapPin, ShoppingCart, Wallet, TrendingUp, CalendarDays, UserCheck, UserX, Activity, Download } from "lucide-react";
+import { Users, MapPin, ShoppingCart, Wallet, TrendingUp, CalendarDays, UserCheck, UserX, Activity, Download, Clock, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { format, subDays } from "date-fns";
+import { format, subDays, formatDistanceToNow, differenceInDays, differenceInHours } from "date-fns";
 
 interface Profile {
   id: string;
