@@ -36,6 +36,7 @@ const Cart = () => {
   const [walletId, setWalletId] = useState<string | null>(null);
   const [walletMinUsage, setWalletMinUsage] = useState(0);
   const [walletMaxRedeem, setWalletMaxRedeem] = useState<number | null>(null);
+  const [walletRewardPopup, setWalletRewardPopup] = useState<{ rewards: { amount: number; desc: string }[]; total: number } | null>(null);
 
   // Load saved address and wallet
   useEffect(() => {
