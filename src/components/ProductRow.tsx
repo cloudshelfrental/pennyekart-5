@@ -32,6 +32,13 @@ const ProductRow = ({ title, products, linkPrefix = "/product/", sectionKey }: P
   const meta = sectionKey ? sectionMeta[sectionKey] : null;
   const Icon = meta?.icon;
 
+  // Sort: available first, coming_soon last
+  const sortedProducts = [...products].sort((a, b) => {
+    if (a.coming_soon && !b.coming_soon) return 1;
+    if (!a.coming_soon && b.coming_soon) return -1;
+    return 0;
+  });
+
   return (
     <section className={`py-4 ${meta ? `bg-gradient-to-r ${meta.gradient}` : "bg-card"}`}>
       <div className="container">
