@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import PlatformSelector from "@/components/PlatformSelector";
 import SearchBar from "@/components/SearchBar";
@@ -11,6 +11,7 @@ import FlashSaleBanner from "@/components/FlashSaleBanner";
 import Footer from "@/components/Footer";
 import CartReminderBanner from "@/components/CartReminderBanner";
 import WalletRewardPopup from "@/components/WalletRewardPopup";
+import SortFilterBar, { SortOption } from "@/components/SortFilterBar";
 import { useAuth } from "@/hooks/useAuth";
 import { useAreaProducts } from "@/hooks/useAreaProducts";
 import { useSectionProducts } from "@/hooks/useSectionProducts";
