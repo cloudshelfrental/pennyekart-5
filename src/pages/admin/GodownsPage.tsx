@@ -986,6 +986,32 @@ const GodownsPage = () => {
           {GODOWN_TYPES.map(t => (
             <TabsContent key={t.value} value={t.value}>
               <div className="space-y-4">
+                {/* District / Panchayath Filter */}
+                <div className="flex flex-wrap gap-3 items-end">
+                  <div className="w-48">
+                    <Label className="text-xs">District</Label>
+                    <Select value={filterDistrictId} onValueChange={v => { setFilterDistrictId(v === "all" ? "" : v); setFilterLocalBodyId(""); }}>
+                      <SelectTrigger><SelectValue placeholder="All Districts" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Districts</SelectItem>
+                        {districts.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="w-56">
+                    <Label className="text-xs">Panchayath / Municipality</Label>
+                    <Select value={filterLocalBodyId} onValueChange={v => setFilterLocalBodyId(v === "all" ? "" : v)}>
+                      <SelectTrigger><SelectValue placeholder="All" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All</SelectItem>
+                        {filterableLocalBodies.map(lb => <SelectItem key={lb.id} value={lb.id}>{lb.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {(filterDistrictId || filterLocalBodyId) && (
+                    <Button variant="ghost" size="sm" onClick={() => { setFilterDistrictId(""); setFilterLocalBodyId(""); }}>Clear</Button>
+                  )}
+                </div>
                 {filteredGodowns.length === 0 ? (
                   <Card><CardContent className="py-8 text-center text-muted-foreground">No {t.label}s yet.</CardContent></Card>
                 ) : filteredGodowns.map(g => {
