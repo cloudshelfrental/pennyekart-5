@@ -50,9 +50,10 @@ interface CustomerListProps {
   customers: Profile[];
   orderSummaries?: Map<string, OrderSummary>;
   walletSummaries?: Map<string, WalletSummary>;
+  onRefresh?: () => void;
 }
 
-type ActivityFilter = "all" | "active" | "inactive" | "new" | "never_ordered";
+type ActivityFilter = "all" | "active" | "inactive" | "new" | "never_ordered" | "blocked";
 type InactivePeriod = "7" | "30" | "60" | "90";
 
 const CustomerList = ({ customers, orderSummaries, walletSummaries }: CustomerListProps) => {
