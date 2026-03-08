@@ -232,7 +232,7 @@ const CustomerList = ({ customers, orderSummaries, walletSummaries }: CustomerLi
   };
 
   const exportCSV = () => {
-    const headers = ["#", "Name", "Mobile", "Status", "Joined", "Orders", "Total Spent", "Last Order", "Wallet", "Panchayath", "Ward"];
+    const headers = ["#", "Name", "Mobile", "Status", "Joined", "Last Login", "Orders", "Total Spent", "Last Order", "Wallet", "Panchayath", "Ward"];
     const rows = filtered.map((c, i) => {
       const o = orderSummaries?.get(c.user_id);
       const w = walletSummaries?.get(c.user_id);
