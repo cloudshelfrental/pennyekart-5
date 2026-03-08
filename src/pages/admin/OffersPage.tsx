@@ -21,6 +21,7 @@ interface Product {
   section: string | null;
   is_active: boolean;
   category: string | null;
+  source?: "admin" | "seller";
 }
 
 const sectionConfig = [
@@ -35,6 +36,7 @@ const AUTO_ASSIGN_LIMIT = 10;
 
 const OffersPage = () => {
   const [products, setProducts] = useState<Product[]>([]);
+  const [featuredSellerProducts, setFeaturedSellerProducts] = useState<Product[]>([]);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [addDialogSection, setAddDialogSection] = useState<string | null>(null);
   const [search, setSearch] = useState("");
@@ -48,7 +50,19 @@ const OffersPage = () => {
       .select("id, name, price, mrp, image_url, section, is_active, category")
       .eq("is_active", true)
       .order("name");
-    setProducts((data as Product[]) ?? []);
+    setProducts((data ?? []).map((p) => ({ ...p, source: "admin" as const })));
+  };
+
+  const fetchFeaturedSellerProducts = async () => {
+    const { data } = await supabase
+      .from("seller_products")
+      .select("id, name, price, mrp, image_url, is_active, category, is_featured")
+      .eq("is_active", true)
+      .eq("is_approved", true)
+      .eq("is_featured", true);
+    setFeaturedSellerProducts(
+      (data ?? []).map((p) => ({ ...p, section: "featured", source: "seller" as const }))
+    );
   };
 
   const fetchAllProducts = async () => {
@@ -62,20 +76,32 @@ const OffersPage = () => {
 
   useEffect(() => {
     fetchProducts();
+    fetchFeaturedSellerProducts();
   }, []);
 
   const grouped = sectionConfig.map((sec) => ({
     ...sec,
-    items: products.filter((p) => p.section === sec.key),
+    items: sec.key === "featured"
+      ? [...products.filter((p) => p.section === sec.key), ...featuredSellerProducts]
+      : products.filter((p) => p.section === sec.key),
   }));
 
-  const handleRemoveFromSection = async (productId: string) => {
-    const { error } = await supabase.from("products").update({ section: null }).eq("id", productId);
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-      return;
+  const handleRemoveFromSection = async (product: Product) => {
+    if (product.source === "seller") {
+      const { error } = await supabase.from("seller_products").update({ is_featured: false }).eq("id", product.id);
+      if (error) {
+        toast({ title: "Error", description: error.message, variant: "destructive" });
+        return;
+      }
+      fetchFeaturedSellerProducts();
+    } else {
+      const { error } = await supabase.from("products").update({ section: null }).eq("id", product.id);
+      if (error) {
+        toast({ title: "Error", description: error.message, variant: "destructive" });
+        return;
+      }
+      fetchProducts();
     }
-    fetchProducts();
     toast({ title: "Removed from section" });
   };
 
@@ -101,9 +127,10 @@ const OffersPage = () => {
       if (clearError) throw clearError;
 
       let productIds: string[] = [];
+      let totalAssigned = 0;
 
       if (sectionKey === "featured") {
-        // Get highest discount active products as featured
+        // Get highest discount active admin products as featured
         const { data } = await supabase
           .from("products")
           .select("id")
@@ -112,8 +139,16 @@ const OffersPage = () => {
           .order("discount_rate", { ascending: false })
           .limit(AUTO_ASSIGN_LIMIT);
         productIds = (data ?? []).map((p) => p.id);
+
+        // Also count seller products already marked as featured
+        const { data: sellerFeatured } = await supabase
+          .from("seller_products")
+          .select("id")
+          .eq("is_active", true)
+          .eq("is_approved", true)
+          .eq("is_featured", true);
+        totalAssigned = productIds.length + (sellerFeatured ?? []).length;
       } else if (sectionKey === "low_budget") {
-        // Get cheapest active products
         const { data } = await supabase
           .from("products")
           .select("id")
@@ -122,8 +157,8 @@ const OffersPage = () => {
           .order("price", { ascending: true })
           .limit(AUTO_ASSIGN_LIMIT);
         productIds = (data ?? []).map((p) => p.id);
+        totalAssigned = productIds.length;
       } else if (sectionKey === "new_arrivals") {
-        // Get most recently created products
         const { data } = await supabase
           .from("products")
           .select("id")
@@ -132,8 +167,8 @@ const OffersPage = () => {
           .order("created_at", { ascending: false })
           .limit(AUTO_ASSIGN_LIMIT);
         productIds = (data ?? []).map((p) => p.id);
+        totalAssigned = productIds.length;
       } else if (sectionKey === "most_ordered") {
-        // Count product occurrences in orders
         const { data: orders } = await supabase
           .from("orders")
           .select("items");
@@ -152,9 +187,10 @@ const OffersPage = () => {
           .slice(0, AUTO_ASSIGN_LIMIT)
           .map(([id]) => id);
         productIds = sorted;
+        totalAssigned = productIds.length;
       }
 
-      // Assign section to selected products
+      // Assign section to selected admin products
       if (productIds.length > 0) {
         for (const id of productIds) {
           await supabase.from("products").update({ section: sectionKey }).eq("id", id).eq("is_active", true);
@@ -162,9 +198,10 @@ const OffersPage = () => {
       }
 
       await fetchProducts();
+      await fetchFeaturedSellerProducts();
       toast({
         title: "Auto-assigned",
-        description: `${productIds.length} products added to ${sectionConfig.find((s) => s.key === sectionKey)?.label}`,
+        description: `${totalAssigned} products in ${sectionConfig.find((s) => s.key === sectionKey)?.label}`,
       });
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
@@ -248,12 +285,17 @@ const OffersPage = () => {
                               <span className="line-through">₹{product.mrp}</span>
                             )}
                           </div>
-                          {product.category && (
-                            <Badge variant="outline" className="text-[10px] mt-1">{product.category}</Badge>
-                          )}
+                          <div className="flex items-center gap-1 mt-1">
+                            {product.category && (
+                              <Badge variant="outline" className="text-[10px]">{product.category}</Badge>
+                            )}
+                            {product.source === "seller" && (
+                              <Badge variant="secondary" className="text-[10px]">Seller</Badge>
+                            )}
+                          </div>
                         </div>
                         {canEdit && (
-                          <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => handleRemoveFromSection(product.id)}>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => handleRemoveFromSection(product)}>
                             <X className="h-4 w-4" />
                           </Button>
                         )}
