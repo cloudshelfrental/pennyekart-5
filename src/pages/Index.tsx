@@ -11,6 +11,7 @@ import FlashSaleBanner from "@/components/FlashSaleBanner";
 import Footer from "@/components/Footer";
 import CartReminderBanner from "@/components/CartReminderBanner";
 import WalletRewardPopup from "@/components/WalletRewardPopup";
+import SortFilterBar, { SortOption } from "@/components/SortFilterBar";
 import { useAuth } from "@/hooks/useAuth";
 import { useAreaProducts } from "@/hooks/useAreaProducts";
 import { useSectionProducts } from "@/hooks/useSectionProducts";
@@ -21,6 +22,7 @@ const sectionOrder = ["featured", "sponsors", "most_ordered", "new_arrivals", "l
 const Index = () => {
   const [platform, setPlatform] = useState("pennyekart");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<SortOption>("relevance");
   const [showSignupReward, setShowSignupReward] = useState(false);
   const [signupRewardAmount, setSignupRewardAmount] = useState(0);
   const navigate = useNavigate();
@@ -31,9 +33,7 @@ const Index = () => {
   useEffect(() => {
     const state = location.state as any;
     if (state?.showSignupReward && user) {
-      // Clear the state so it doesn't show again on refresh
       window.history.replaceState({}, document.title);
-      // Fetch the wallet balance to show the signup bonus
       const fetchWalletBonus = async () => {
         const { data } = await supabase
           .from("customer_wallets")
@@ -44,16 +44,15 @@ const Index = () => {
         setSignupRewardAmount(Number(amount));
         setShowSignupReward(true);
       };
-      // Small delay to let the profile/wallet creation trigger complete
       setTimeout(fetchWalletBonus, 1500);
     }
   }, [location.state, user]);
+
   const { products: areaProducts, loading: areaLoading } = useAreaProducts();
   const { grouped: sectionGrouped, loading: sectionLoading } = useSectionProducts();
 
   const isCustomer = user && profile?.user_type === "customer";
 
-  // Helper to convert products to row format
   const toRowFormat = (items: { id?: string; name: string; price: number; mrp: number; image_url: string | null; coming_soon?: boolean; wallet_points?: number }[]) =>
     items.map(p => ({
       id: (p as any).id,
@@ -65,6 +64,32 @@ const Index = () => {
       coming_soon: p.coming_soon,
       wallet_points: p.wallet_points,
     }));
+
+  // Sort products based on selected sort option
+  const applySorting = <T extends { price: number; mrp: number; coming_soon?: boolean; section?: string | null }>(items: T[]): T[] => {
+    if (sortBy === "relevance") return items;
+    return [...items].sort((a, b) => {
+      if (a.coming_soon && !b.coming_soon) return 1;
+      if (!a.coming_soon && b.coming_soon) return -1;
+      switch (sortBy) {
+        case "price_low":
+          return a.price - b.price;
+        case "price_high":
+          return b.price - a.price;
+        case "rating":
+          return 0;
+        case "discount": {
+          const discA = a.mrp > a.price ? ((a.mrp - a.price) / a.mrp) * 100 : 0;
+          const discB = b.mrp > b.price ? ((b.mrp - b.price) / b.mrp) * 100 : 0;
+          return discB - discA;
+        }
+        case "most_ordered":
+          return (a.section === "most_ordered" ? -1 : 0) - (b.section === "most_ordered" ? -1 : 0);
+        default:
+          return 0;
+      }
+    });
+  };
 
   // Group area products by category
   const groupedByCategory = areaProducts.reduce<Record<string, typeof areaProducts>>((acc, p) => {
@@ -129,7 +154,7 @@ const Index = () => {
       const rows: React.ReactNode[] = [];
 
       if (selectedItems.length > 0) {
-        rows.push(<ProductRow key={selectedCategory} title={selectedCategory} products={toRowFormat(selectedItems)} />);
+        rows.push(<ProductRow key={selectedCategory} title={selectedCategory} products={toRowFormat(applySorting(selectedItems))} />);
       } else {
         rows.push(
           <div key="empty" className="py-4 text-center text-muted-foreground">
@@ -138,12 +163,11 @@ const Index = () => {
         );
       }
 
-      // Show all other categories after
       Object.entries(sourceProducts)
         .filter(([cat]) => cat !== selectedCategory)
         .forEach(([cat, items]) => {
           if (items.length > 0) {
-            rows.push(<ProductRow key={cat} title={cat} products={toRowFormat(items)} />);
+            rows.push(<ProductRow key={cat} title={cat} products={toRowFormat(applySorting(items))} />);
           }
         });
 
@@ -162,10 +186,9 @@ const Index = () => {
       const sectionRows = sectionOrder
         .filter(s => areaBySection[s]?.length > 0)
         .map(sec => (
-          <ProductRow key={sec} title={sectionLabels[sec] || sec} products={toRowFormat(areaBySection[sec])} sectionKey={sec} />
+          <ProductRow key={sec} title={sectionLabels[sec] || sec} products={toRowFormat(applySorting(areaBySection[sec]))} sectionKey={sec} />
         ));
 
-      // Products without a section, grouped by category
       const nonsectionProducts = areaProducts.filter(p => !p.section || p.section === "" || p.section === "seller");
       const nonsectionByCategory = nonsectionProducts.reduce<Record<string, typeof areaProducts>>((acc, p) => {
         const cat = p.category || "Other";
@@ -174,7 +197,7 @@ const Index = () => {
         return acc;
       }, {});
       const categoryRows = Object.entries(nonsectionByCategory).map(([cat, items]) =>
-        items.length > 0 ? <ProductRow key={cat} title={cat} products={toRowFormat(items)} /> : null
+        items.length > 0 ? <ProductRow key={cat} title={cat} products={toRowFormat(applySorting(items))} /> : null
       );
 
       return [...sectionRows, ...categoryRows];
@@ -184,7 +207,7 @@ const Index = () => {
     const sections = sectionOrder.filter(s => sectionGrouped[s]?.items.length > 0);
     if (sections.length > 0) {
       return sections.map(sec => (
-        <ProductRow key={sec} title={sectionGrouped[sec].label} products={toRowFormat(sectionGrouped[sec].items)} sectionKey={sec} />
+        <ProductRow key={sec} title={sectionGrouped[sec].label} products={toRowFormat(applySorting(sectionGrouped[sec].items))} sectionKey={sec} />
       ));
     }
 
@@ -194,11 +217,7 @@ const Index = () => {
     }
     const allProducts = Object.values(sectionGrouped).flatMap(g => g.items);
     if (allProducts.length === 0) {
-      // Also try ungrouped products from the hook
-      const flatProducts = Object.values(sectionGrouped).flatMap(g => g.items);
-      if (flatProducts.length === 0) {
-        return <div className="py-8 text-center text-muted-foreground">No products available yet.</div>;
-      }
+      return <div className="py-8 text-center text-muted-foreground">No products available yet.</div>;
     }
     const allByCategory = allProducts.reduce<Record<string, typeof allProducts>>((acc, p) => {
       const cat = p.category || "Other";
@@ -207,7 +226,7 @@ const Index = () => {
       return acc;
     }, {});
     return Object.entries(allByCategory).map(([cat, items]) => (
-      <ProductRow key={cat} title={cat} products={toRowFormat(items)} />
+      <ProductRow key={cat} title={cat} products={toRowFormat(applySorting(items))} />
     ));
   };
 
@@ -222,6 +241,7 @@ const Index = () => {
         <CartReminderBanner />
         <FlashSaleBanner />
         <CategoryBar onCategoryClick={handleCategoryClick} selectedCategory={selectedCategory} />
+        <SortFilterBar selected={sortBy} onChange={setSortBy} />
         <BannerCarousel />
         <GroceryCategories onCategoryClick={handleCategoryClick} selectedCategory={selectedCategory} />
         {renderSectionProducts()}
