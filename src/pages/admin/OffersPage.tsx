@@ -43,6 +43,11 @@ interface GodownWard {
   ward_number: number;
 }
 
+interface GodownLocalBody {
+  godown_id: string;
+  local_body_id: string;
+}
+
 interface GodownStock {
   godown_id: string;
   product_id: string;
@@ -83,6 +88,7 @@ const OffersPage = () => {
   const [districts, setDistricts] = useState<District[]>([]);
   const [localBodies, setLocalBodies] = useState<LocalBody[]>([]);
   const [godownWards, setGodownWards] = useState<GodownWard[]>([]);
+  const [godownLocalBodies, setGodownLocalBodies] = useState<GodownLocalBody[]>([]);
   const [godownStock, setGodownStock] = useState<GodownStock[]>([]);
   const [sellerGodownAssignments, setSellerGodownAssignments] = useState<SellerGodownAssignment[]>([]);
   const [sellerProductsList, setSellerProductsList] = useState<SellerProduct[]>([]);
@@ -121,10 +127,11 @@ const OffersPage = () => {
   };
 
   const fetchAreaData = async () => {
-    const [distRes, lbRes, gwRes, gsRes, sgaRes, spRes] = await Promise.all([
+    const [distRes, lbRes, gwRes, glbRes, gsRes, sgaRes, spRes] = await Promise.all([
       supabase.from("locations_districts").select("id, name").eq("is_active", true).order("name"),
       supabase.from("locations_local_bodies").select("id, name, district_id, ward_count").eq("is_active", true).order("name"),
       supabase.from("godown_wards").select("godown_id, local_body_id, ward_number"),
+      supabase.from("godown_local_bodies").select("godown_id, local_body_id"),
       supabase.from("godown_stock").select("godown_id, product_id, quantity").gt("quantity", 0),
       supabase.from("seller_godown_assignments").select("seller_id, godown_id"),
       supabase.from("seller_products").select("id, seller_id").eq("is_active", true).eq("is_approved", true),
@@ -132,6 +139,7 @@ const OffersPage = () => {
     setDistricts(distRes.data ?? []);
     setLocalBodies(lbRes.data ?? []);
     setGodownWards(gwRes.data ?? []);
+    setGodownLocalBodies(glbRes.data ?? []);
     setGodownStock(gsRes.data ?? []);
     setSellerGodownAssignments(sgaRes.data ?? []);
     setSellerProductsList(spRes.data ?? []);
@@ -164,35 +172,49 @@ const OffersPage = () => {
     const isFiltering = filterDistrict !== "all" || filterLocalBody !== "all" || filterWard !== "all";
     if (!isFiltering) return null; // null = no filter, show all
 
-    // Find matching godown_ward entries
-    let matchingGodownIds = new Set<string>();
+    // Find matching micro godown IDs (ward-level)
+    let microGodownIds = new Set<string>();
+    // Find matching area godown IDs (local-body-level)
+    let areaGodownIds = new Set<string>();
 
     if (filterWard !== "all" && filterLocalBody !== "all") {
       godownWards
         .filter((gw) => gw.local_body_id === filterLocalBody && gw.ward_number === parseInt(filterWard))
-        .forEach((gw) => matchingGodownIds.add(gw.godown_id));
+        .forEach((gw) => microGodownIds.add(gw.godown_id));
+      godownLocalBodies
+        .filter((glb) => glb.local_body_id === filterLocalBody)
+        .forEach((glb) => areaGodownIds.add(glb.godown_id));
     } else if (filterLocalBody !== "all") {
       godownWards
         .filter((gw) => gw.local_body_id === filterLocalBody)
-        .forEach((gw) => matchingGodownIds.add(gw.godown_id));
+        .forEach((gw) => microGodownIds.add(gw.godown_id));
+      godownLocalBodies
+        .filter((glb) => glb.local_body_id === filterLocalBody)
+        .forEach((glb) => areaGodownIds.add(glb.godown_id));
     } else if (filterDistrict !== "all") {
       const lbIds = new Set(localBodies.filter((lb) => lb.district_id === filterDistrict).map((lb) => lb.id));
       godownWards
         .filter((gw) => lbIds.has(gw.local_body_id))
-        .forEach((gw) => matchingGodownIds.add(gw.godown_id));
+        .forEach((gw) => microGodownIds.add(gw.godown_id));
+      godownLocalBodies
+        .filter((glb) => lbIds.has(glb.local_body_id))
+        .forEach((glb) => areaGodownIds.add(glb.godown_id));
     }
+
+    // Combine all matching godown IDs
+    const allGodownIds = new Set([...microGodownIds, ...areaGodownIds]);
 
     // Admin products with stock in matching godowns
     const adminIds = new Set<string>();
     godownStock
-      .filter((gs) => matchingGodownIds.has(gs.godown_id))
+      .filter((gs) => allGodownIds.has(gs.godown_id))
       .forEach((gs) => adminIds.add(gs.product_id));
 
-    // Seller products: seller assigned to area godowns that serve matching local bodies
+    // Seller products: seller assigned to any matching godown
     const sellerIds = new Set<string>();
     const sellersInArea = new Set<string>();
     sellerGodownAssignments.forEach((sga) => {
-      if (matchingGodownIds.has(sga.godown_id)) {
+      if (allGodownIds.has(sga.godown_id)) {
         sellersInArea.add(sga.seller_id);
       }
     });
@@ -203,7 +225,7 @@ const OffersPage = () => {
     });
 
     return { adminIds, sellerIds };
-  }, [filterDistrict, filterLocalBody, filterWard, godownWards, godownStock, localBodies, sellerGodownAssignments, sellerProductsList]);
+  }, [filterDistrict, filterLocalBody, filterWard, godownWards, godownLocalBodies, godownStock, localBodies, sellerGodownAssignments, sellerProductsList]);
 
   const filterProduct = (product: Product) => {
     if (!areaProductIds) return true;
