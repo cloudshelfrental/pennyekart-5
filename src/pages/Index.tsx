@@ -229,6 +229,13 @@ const Index = () => {
 
       <Footer />
       <MobileBottomNav />
+
+      <WalletRewardPopup
+        open={showSignupReward}
+        onClose={() => setShowSignupReward(false)}
+        rewards={[{ amount: signupRewardAmount, desc: "Signup bonus credited to your wallet" }]}
+        totalAmount={signupRewardAmount}
+      />
     </div>
   );
 };
