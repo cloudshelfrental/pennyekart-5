@@ -1,16 +1,31 @@
 import logo from "@/assets/logo.png";
-import { ShoppingCart, Menu, X, User, LogOut, Package, MapPin, Heart, Bell, ChevronDown } from "lucide-react";
+import { ShoppingCart, Menu, X, User, LogOut, Package, MapPin, Heart, Bell, ChevronDown, Wallet } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 const Navbar = () => {
   const [open, setOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [walletBalance, setWalletBalance] = useState<number | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { user, profile, signOut } = useAuth();
   const links = ["Home", "Categories", "Deals", "About", "Contact"];
+
+  useEffect(() => {
+    if (user && profile?.user_type === 'customer') {
+      supabase
+        .from('customer_wallets')
+        .select('balance')
+        .eq('customer_user_id', user.id)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data) setWalletBalance(data.balance);
+        });
+    }
+  }, [user, profile]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -46,6 +61,16 @@ const Navbar = () => {
         </ul>
 
         <div className="flex items-center gap-4">
+          {user && walletBalance !== null && (
+            <button
+              className="flex items-center gap-1 text-foreground hover:text-primary transition-colors"
+              onClick={() => navigate("/customer/wallet")}
+              aria-label="Wallet"
+            >
+              <Wallet className="h-4.5 w-4.5 text-emerald-600" />
+              <span className="text-xs font-bold text-emerald-600">₹{walletBalance}</span>
+            </button>
+          )}
           <button className="relative text-foreground" aria-label="Cart" onClick={() => navigate("/cart")}>
             <ShoppingCart className="h-5 w-5" />
           </button>
