@@ -24,7 +24,7 @@ interface Product {
 }
 
 const sectionConfig = [
-  { key: "featured", label: "Featured Products", icon: Star, color: "text-yellow-500", autoAssign: false },
+  { key: "featured", label: "Featured Products", icon: Star, color: "text-yellow-500", autoAssign: true },
   { key: "most_ordered", label: "Most Ordered Items", icon: TrendingUp, color: "text-blue-500", autoAssign: true },
   { key: "new_arrivals", label: "New Arrivals", icon: Sparkles, color: "text-green-500", autoAssign: true },
   { key: "low_budget", label: "Low Budget Picks", icon: Wallet, color: "text-orange-500", autoAssign: true },
@@ -102,7 +102,17 @@ const OffersPage = () => {
 
       let productIds: string[] = [];
 
-      if (sectionKey === "low_budget") {
+      if (sectionKey === "featured") {
+        // Get highest discount active products as featured
+        const { data } = await supabase
+          .from("products")
+          .select("id")
+          .eq("is_active", true)
+          .is("section", null)
+          .order("discount_rate", { ascending: false })
+          .limit(AUTO_ASSIGN_LIMIT);
+        productIds = (data ?? []).map((p) => p.id);
+      } else if (sectionKey === "low_budget") {
         // Get cheapest active products
         const { data } = await supabase
           .from("products")
@@ -137,7 +147,6 @@ const OffersPage = () => {
             });
           }
         });
-        // Sort by count descending, take top N
         const sorted = Object.entries(countMap)
           .sort(([, a], [, b]) => b - a)
           .slice(0, AUTO_ASSIGN_LIMIT)
