@@ -214,8 +214,9 @@ const CustomerList = ({ customers, orderSummaries, walletSummaries, onRefresh }:
       if (filterWard !== "all" && String(c.ward_number) !== filterWard) return false;
       return true;
     });
-    const counts = { all: locationFiltered.length, active: 0, inactive: 0, new: 0, never_ordered: 0 };
+    const counts = { all: locationFiltered.length, active: 0, inactive: 0, new: 0, never_ordered: 0, blocked: 0 };
     locationFiltered.forEach((c) => {
+      if (c.is_blocked) counts.blocked++;
       const status = classifyCustomer(c);
       counts[status]++;
     });
