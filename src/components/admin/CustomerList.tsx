@@ -278,10 +278,11 @@ const CustomerList = ({ customers, orderSummaries, walletSummaries }: CustomerLi
   };
 
   const exportCSV = () => {
-    const headers = ["#", "Name", "Mobile", "Status", "Joined", "Last Login", "Orders", "Total Spent", "Last Order", "Wallet", "Panchayath", "Ward"];
+    const headers = ["#", "Name", "Mobile", "Status", "Joined", "Last Login", "Orders", "Total Spent", "Last Order", "Search Count", "Recent Searches", "Wallet", "Panchayath", "Ward"];
     const rows = filtered.map((c, i) => {
       const o = orderSummaries?.get(c.user_id);
       const w = walletSummaries?.get(c.user_id);
+      const sh = searchHistories.get(c.user_id);
       return [
         i + 1,
         c.full_name ?? "",
@@ -292,6 +293,8 @@ const CustomerList = ({ customers, orderSummaries, walletSummaries }: CustomerLi
         o?.order_count ?? 0,
         o?.total_spent?.toFixed(0) ?? "0",
         o?.last_order_date ? format(new Date(o.last_order_date), "dd MMM yyyy") : "",
+        sh?.search_count ?? 0,
+        sh?.recent_searches.slice(0, 5).join("; ") ?? "",
         w?.balance?.toFixed(0) ?? "0",
         c.local_body_name ?? "",
         c.ward_number ?? "",
