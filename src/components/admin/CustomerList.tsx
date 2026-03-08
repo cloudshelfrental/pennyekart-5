@@ -19,6 +19,7 @@ interface Profile {
   local_body_type?: string | null;
   district_name?: string | null;
   created_at?: string;
+  last_login_at?: string | null;
 }
 
 interface OrderSummary {
