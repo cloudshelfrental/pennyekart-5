@@ -128,21 +128,42 @@ const ReportsPage = () => {
     });
   }, [orders, dateFrom, dateTo, filterStatus, filterCategory, productMapEarly, sellerProdMapEarly]);
 
+  // Location filter derived data
+  const filteredLocalBodies = useMemo(() => {
+    if (filterDistrict === "all") return localBodies;
+    return localBodies.filter(lb => lb.district_id === filterDistrict);
+  }, [localBodies, filterDistrict]);
+
+  const wardOptions = useMemo(() => {
+    if (filterLocalBody === "all") return [];
+    const lb = localBodies.find(l => l.id === filterLocalBody);
+    if (!lb) return [];
+    return Array.from({ length: lb.ward_count }, (_, i) => i + 1);
+  }, [localBodies, filterLocalBody]);
+
+  // Profile lookup for location filtering
+  const profileMap = useMemo(() => {
+    const m: Record<string, Profile> = {};
+    profiles.forEach(p => { m[p.user_id] = p; });
+    return m;
+  }, [profiles]);
+
   useEffect(() => {
     const load = async () => {
       setLoading(true);
       const [
         { data: ord }, { data: prod }, { data: sprod }, { data: gstock },
-        { data: prof }, { data: sw }, { data: stxn }, { data: lb }
+        { data: prof }, { data: sw }, { data: stxn }, { data: lb }, { data: dist }
       ] = await Promise.all([
         supabase.from("orders").select("id,status,total,items,created_at,user_id,seller_id,assigned_delivery_staff_id,godown_id").order("created_at", { ascending: false }),
         supabase.from("products").select("id,name,price,purchase_rate,mrp,stock,is_active,category"),
         supabase.from("seller_products").select("id,name,price,purchase_rate,stock,seller_id,is_approved"),
         supabase.from("godown_stock").select("id,quantity,product_id,purchase_price,godown_id"),
-        supabase.from("profiles").select("user_id,full_name,user_type,local_body_id"),
+        supabase.from("profiles").select("user_id,full_name,user_type,local_body_id,ward_number"),
         supabase.from("seller_wallets").select("seller_id,balance"),
         supabase.from("seller_wallet_transactions").select("seller_id,type,amount,description"),
-        supabase.from("locations_local_bodies").select("id,name"),
+        supabase.from("locations_local_bodies").select("id,name,district_id,ward_count"),
+        supabase.from("locations_districts").select("id,name"),
       ]);
       setOrders((ord ?? []) as Order[]);
       setProducts((prod ?? []) as Product[]);
@@ -152,6 +173,7 @@ const ReportsPage = () => {
       setSellerWallets((sw ?? []) as SellerWallet[]);
       setSellerTxns((stxn ?? []) as SellerWalletTxn[]);
       setLocalBodies((lb ?? []) as LocalBody[]);
+      setDistricts((dist ?? []) as District[]);
       setLoading(false);
     };
     load();
