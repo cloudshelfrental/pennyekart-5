@@ -319,6 +319,56 @@ const CustomerList = ({ customers, orderSummaries, walletSummaries }: CustomerLi
         </Card>
       </div>
 
+      {/* Recent Activity Tracker */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <Card>
+          <CardHeader className="pb-2 pt-4 px-4">
+            <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+              <Zap className="h-3.5 w-3.5" /> Recent Order Activity
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-4 pb-4">
+            <div className="flex items-center gap-4">
+              <div className="text-center">
+                <p className="text-2xl font-bold text-emerald-600">{recentActivity.today}</p>
+                <p className="text-[10px] text-muted-foreground">Today</p>
+              </div>
+              <div className="h-8 w-px bg-border" />
+              <div className="text-center">
+                <p className="text-2xl font-bold text-blue-600">{recentActivity.last7}</p>
+                <p className="text-[10px] text-muted-foreground">Last 7 days</p>
+              </div>
+              <div className="h-8 w-px bg-border" />
+              <div className="text-center">
+                <p className="text-2xl font-bold text-amber-600">{recentActivity.last30}</p>
+                <p className="text-[10px] text-muted-foreground">Last 30 days</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2 pt-4 px-4">
+            <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+              <Clock className="h-3.5 w-3.5" /> Latest Customer Orders
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-4 pb-4">
+            {recentActivity.recentCustomers.length > 0 ? (
+              <div className="space-y-1.5">
+                {recentActivity.recentCustomers.map((rc, i) => (
+                  <div key={i} className="flex items-center justify-between text-xs">
+                    <span className="font-medium truncate max-w-[140px]">{rc.name}</span>
+                    <span className="text-muted-foreground">{rc.ago}</span>
+                    <Badge variant="outline" className="font-mono text-[10px]">₹{rc.amount.toFixed(0)}</Badge>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground">No recent orders</p>
+            )}
+          </CardContent>
+        </Card>
+
       {/* Activity Status Tabs */}
       <Card>
         <CardContent className="p-3">
