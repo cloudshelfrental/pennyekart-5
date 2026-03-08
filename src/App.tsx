@@ -53,6 +53,7 @@ import FlashSaleDetail from "./pages/customer/FlashSaleDetail";
 import Cart from "./pages/customer/Cart";
 import CustomerProfile from "./pages/customer/Profile";
 import CustomerWallet from "./pages/customer/Wallet";
+import PlayVideos from "./pages/customer/PlayVideos";
 
 const queryClient = new QueryClient();
 
