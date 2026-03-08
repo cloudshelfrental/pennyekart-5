@@ -57,6 +57,43 @@ const CustomerList = ({ customers, orderSummaries, walletSummaries }: CustomerLi
   const [sortBy, setSortBy] = useState<string>("newest");
   const [activityFilter, setActivityFilter] = useState<ActivityFilter>("all");
   const [inactivePeriod, setInactivePeriod] = useState<InactivePeriod>("30");
+  const [searchHistories, setSearchHistories] = useState<Map<string, SearchHistorySummary>>(new Map());
+
+  // Fetch search histories for all customers
+  useEffect(() => {
+    const fetchSearchHistories = async () => {
+      const customerIds = customers.map(c => c.user_id);
+      if (customerIds.length === 0) return;
+
+      const { data } = await supabase
+        .from('customer_search_history')
+        .select('customer_user_id, search_query, created_at')
+        .in('customer_user_id', customerIds)
+        .order('created_at', { ascending: false });
+
+      if (data) {
+        const map = new Map<string, SearchHistorySummary>();
+        data.forEach((row: any) => {
+          const existing = map.get(row.customer_user_id);
+          if (existing) {
+            existing.search_count++;
+            if (existing.recent_searches.length < 5 && !existing.recent_searches.includes(row.search_query)) {
+              existing.recent_searches.push(row.search_query);
+            }
+          } else {
+            map.set(row.customer_user_id, {
+              user_id: row.customer_user_id,
+              search_count: 1,
+              recent_searches: [row.search_query],
+              last_search_at: row.created_at,
+            });
+          }
+        });
+        setSearchHistories(map);
+      }
+    };
+    fetchSearchHistories();
+  }, [customers]);
 
   // Classify customers by activity
   const classifyCustomer = (c: Profile): "active" | "inactive" | "new" | "never_ordered" => {
