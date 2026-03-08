@@ -83,7 +83,8 @@ const Cart = () => {
   const couponDiscount = appliedCoupon?.discount ?? 0;
   const orderSubtotal = totalPrice + platformFee - couponDiscount;
   const canUseWallet = walletBalance > 0 && orderSubtotal >= walletMinUsage;
-  const walletDeduction = useWallet && canUseWallet ? Math.min(walletBalance, orderSubtotal) : 0;
+  const maxRedeemable = walletMaxRedeem !== null ? Math.min(walletBalance, walletMaxRedeem) : walletBalance;
+  const walletDeduction = useWallet && canUseWallet ? Math.min(maxRedeemable, orderSubtotal) : 0;
   const finalAmount = totalPrice + platformFee - couponDiscount - walletDeduction;
   const hasComingSoonItems = items.some(i => i.coming_soon);
 
