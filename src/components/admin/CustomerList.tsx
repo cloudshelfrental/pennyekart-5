@@ -529,6 +529,16 @@ const CustomerList = ({ customers, orderSummaries, walletSummaries }: CustomerLi
                       </span>
                     ) : "—"}
                   </TableCell>
+                  <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                    {c.last_login_at ? (
+                      <div className="flex flex-col">
+                        <span className="font-medium text-foreground">{getRelativeTime(c.last_login_at)}</span>
+                        <span className="text-[10px]">{format(new Date(c.last_login_at), "dd MMM, HH:mm")}</span>
+                      </div>
+                    ) : (
+                      <Badge variant="outline" className="text-[10px] text-muted-foreground">Never</Badge>
+                    )}
+                  </TableCell>
                   <TableCell className="text-center">
                     {o && o.order_count > 0 ? (
                       <Badge variant="secondary">{o.order_count}</Badge>
