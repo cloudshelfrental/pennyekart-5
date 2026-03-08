@@ -22,11 +22,17 @@ interface Godown {
   created_at: string;
 }
 
+interface District {
+  id: string;
+  name: string;
+}
+
 interface LocalBody {
   id: string;
   name: string;
   body_type: string;
   ward_count: number;
+  district_id: string;
 }
 
 interface GodownLocalBody {
@@ -115,6 +121,9 @@ const GodownsPage = () => {
   const [allWards, setAllWards] = useState(false);
   const [activeTab, setActiveTab] = useState("micro");
   const [localBodySearch, setLocalBodySearch] = useState("");
+  const [districts, setDistricts] = useState<District[]>([]);
+  const [filterDistrictId, setFilterDistrictId] = useState("");
+  const [filterLocalBodyId, setFilterLocalBodyId] = useState("");
   // Purchase history state
   const [purchaseHistoryFrom, setPurchaseHistoryFrom] = useState("");
   const [purchaseHistoryTo, setPurchaseHistoryTo] = useState("");
@@ -137,8 +146,13 @@ const GodownsPage = () => {
     if (data) setGodowns(data as Godown[]);
   };
 
+  const fetchDistricts = async () => {
+    const { data } = await supabase.from("locations_districts").select("id, name").eq("is_active", true).order("name");
+    if (data) setDistricts(data as District[]);
+  };
+
   const fetchLocalBodies = async () => {
-    const { data } = await supabase.from("locations_local_bodies").select("id, name, body_type, ward_count").eq("is_active", true);
+    const { data } = await supabase.from("locations_local_bodies").select("id, name, body_type, ward_count, district_id").eq("is_active", true);
     if (data) setLocalBodies(data as LocalBody[]);
   };
 
@@ -176,6 +190,7 @@ const GodownsPage = () => {
 
   useEffect(() => {
     fetchGodowns();
+    fetchDistricts();
     fetchLocalBodies();
     fetchGodownLocalBodies();
     fetchGodownWards();
@@ -292,7 +307,32 @@ const GodownsPage = () => {
     }
   };
 
-  const filteredGodowns = godowns.filter(g => g.godown_type === activeTab);
+  // Get local body IDs for the selected filter district
+  const filterDistrictLocalBodyIds = filterDistrictId
+    ? localBodies.filter(lb => lb.district_id === filterDistrictId).map(lb => lb.id)
+    : [];
+
+  // Local bodies available in the filter district dropdown
+  const filterableLocalBodies = filterDistrictId
+    ? localBodies.filter(lb => lb.district_id === filterDistrictId)
+    : localBodies;
+
+  const filteredGodowns = godowns.filter(g => {
+    if (g.godown_type !== activeTab) return false;
+    // Apply panchayath filter
+    if (filterLocalBodyId) {
+      const hasLB = godownLocalBodies.some(glb => glb.godown_id === g.id && glb.local_body_id === filterLocalBodyId);
+      const hasWard = godownWards.some(gw => gw.godown_id === g.id && gw.local_body_id === filterLocalBodyId);
+      return hasLB || hasWard;
+    }
+    // Apply district filter
+    if (filterDistrictId) {
+      const hasLB = godownLocalBodies.some(glb => glb.godown_id === g.id && filterDistrictLocalBodyIds.includes(glb.local_body_id));
+      const hasWard = godownWards.some(gw => gw.godown_id === g.id && filterDistrictLocalBodyIds.includes(gw.local_body_id));
+      return hasLB || hasWard;
+    }
+    return true;
+  });
 
   const filteredLocalBodies = localBodies.filter(lb =>
     lb.name.toLowerCase().includes(localBodySearch.toLowerCase()) ||
@@ -946,6 +986,32 @@ const GodownsPage = () => {
           {GODOWN_TYPES.map(t => (
             <TabsContent key={t.value} value={t.value}>
               <div className="space-y-4">
+                {/* District / Panchayath Filter */}
+                <div className="flex flex-wrap gap-3 items-end">
+                  <div className="w-48">
+                    <Label className="text-xs">District</Label>
+                    <Select value={filterDistrictId} onValueChange={v => { setFilterDistrictId(v === "all" ? "" : v); setFilterLocalBodyId(""); }}>
+                      <SelectTrigger><SelectValue placeholder="All Districts" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Districts</SelectItem>
+                        {districts.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="w-56">
+                    <Label className="text-xs">Panchayath / Municipality</Label>
+                    <Select value={filterLocalBodyId} onValueChange={v => setFilterLocalBodyId(v === "all" ? "" : v)}>
+                      <SelectTrigger><SelectValue placeholder="All" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All</SelectItem>
+                        {filterableLocalBodies.map(lb => <SelectItem key={lb.id} value={lb.id}>{lb.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {(filterDistrictId || filterLocalBodyId) && (
+                    <Button variant="ghost" size="sm" onClick={() => { setFilterDistrictId(""); setFilterLocalBodyId(""); }}>Clear</Button>
+                  )}
+                </div>
                 {filteredGodowns.length === 0 ? (
                   <Card><CardContent className="py-8 text-center text-muted-foreground">No {t.label}s yet.</CardContent></Card>
                 ) : filteredGodowns.map(g => {
