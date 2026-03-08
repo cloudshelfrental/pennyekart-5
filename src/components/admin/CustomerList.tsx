@@ -125,6 +125,7 @@ const CustomerList = ({ customers, orderSummaries, walletSummaries }: CustomerLi
         case "highest_spent": return (oB?.total_spent ?? 0) - (oA?.total_spent ?? 0);
         case "highest_wallet": return (wB?.balance ?? 0) - (wA?.balance ?? 0);
         case "last_active": return (oB?.last_order_date ?? "").localeCompare(oA?.last_order_date ?? "");
+        case "last_login": return (b.last_login_at ?? "").localeCompare(a.last_login_at ?? "");
         default: return 0;
       }
     });
