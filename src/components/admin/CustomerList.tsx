@@ -56,13 +56,29 @@ interface CustomerListProps {
 type ActivityFilter = "all" | "active" | "inactive" | "new" | "never_ordered" | "blocked";
 type InactivePeriod = "7" | "30" | "60" | "90";
 
-const CustomerList = ({ customers, orderSummaries, walletSummaries }: CustomerListProps) => {
+const CustomerList = ({ customers, orderSummaries, walletSummaries, onRefresh }: CustomerListProps) => {
   const [filterPanchayath, setFilterPanchayath] = useState("all");
   const [filterWard, setFilterWard] = useState("all");
   const [sortBy, setSortBy] = useState<string>("newest");
   const [activityFilter, setActivityFilter] = useState<ActivityFilter>("all");
   const [inactivePeriod, setInactivePeriod] = useState<InactivePeriod>("30");
   const [searchHistories, setSearchHistories] = useState<Map<string, SearchHistorySummary>>(new Map());
+  const { toast } = useToast();
+
+  // Toggle customer block status
+  const toggleBlock = async (userId: string, currentBlocked: boolean) => {
+    const { error } = await supabase
+      .from("profiles")
+      .update({ is_blocked: !currentBlocked })
+      .eq("user_id", userId);
+    
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: !currentBlocked ? "Customer blocked" : "Customer unblocked" });
+      onRefresh?.();
+    }
+  };
   const [mobileSearch, setMobileSearch] = useState("");
 
   // Fetch search histories for all customers
