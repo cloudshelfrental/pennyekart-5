@@ -540,8 +540,20 @@ const CustomerList = ({ customers, orderSummaries, walletSummaries }: CustomerLi
             </SelectContent>
           </Select>
         </div>
-        {(filterPanchayath !== "all" || filterWard !== "all" || activityFilter !== "all") && (
-          <Badge variant="secondary" className="cursor-pointer" onClick={() => { setFilterPanchayath("all"); setFilterWard("all"); setActivityFilter("all"); }}>
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-muted-foreground"><Phone className="h-3.5 w-3.5 inline" /></span>
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Input
+              placeholder="Search mobile..."
+              value={mobileSearch}
+              onChange={(e) => setMobileSearch(e.target.value)}
+              className="w-40 h-9 pl-8 text-sm"
+            />
+          </div>
+        </div>
+        {(filterPanchayath !== "all" || filterWard !== "all" || activityFilter !== "all" || mobileSearch.trim()) && (
+          <Badge variant="secondary" className="cursor-pointer" onClick={() => { setFilterPanchayath("all"); setFilterWard("all"); setActivityFilter("all"); setMobileSearch(""); }}>
             Clear all filters ✕
           </Badge>
         )}
