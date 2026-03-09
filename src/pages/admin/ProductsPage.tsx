@@ -234,7 +234,7 @@ const ProductsPage = () => {
       coming_soon: sellerForm.coming_soon, image_url: sellerForm.image_url || null,
       image_url_2: sellerForm.image_url_2 || null, image_url_3: sellerForm.image_url_3 || null,
       video_url: sellerForm.video_url || null, wallet_points: sellerForm.wallet_points,
-      margin_percentage: sellerForm.margin_percentage,
+      // margin_percentage is NOT updated here — managed only via Platform Margin page
     }).eq("id", sellerEditId);
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     toast({ title: "Seller product updated" });
@@ -583,33 +583,26 @@ const ProductsPage = () => {
               </select>
             </div>
 
-            {/* Platform Margin Override */}
-            <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
-              <Label className="flex items-center gap-2 text-primary text-sm">
+            {/* Platform Margin (Read-only — managed from Platform Margin page) */}
+            <div className="rounded-lg border border-muted bg-muted/30 p-3">
+              <Label className="flex items-center gap-2 text-muted-foreground text-sm">
                 <Percent className="h-4 w-4" />
                 Platform Margin (%)
               </Label>
               <p className="text-xs text-muted-foreground mb-2">
-                Override category margin ({getCategoryMargin(sellerForm.category)}%) for this product
+                Margin is managed by admin via Platform Margin page. Sellers cannot override this.
               </p>
-              <Input 
-                type="number" 
-                min="0"
-                max="100"
-                step="0.1"
-                value={sellerForm.margin_percentage ?? ""} 
-                onChange={(e) => {
-                  const val = e.target.value === "" ? null : +e.target.value;
-                  if (val !== null) {
-                    handleMarginChange(val, sellerForm as any, setSellerForm as any);
-                  } else {
-                    const catMargin = getCategoryMargin(sellerForm.category);
-                    const newPrice = calculateSellingPrice(sellerForm.purchase_rate, catMargin);
-                    setSellerForm({ ...sellerForm, margin_percentage: null, price: newPrice, discount_rate: calculateDiscount(sellerForm.mrp, newPrice) });
-                  }
-                }}
-                placeholder={`Category default: ${getCategoryMargin(sellerForm.category)}%`}
-              />
+              <div className="flex items-center gap-2">
+                <Input 
+                  type="number" 
+                  value={sellerForm.margin_percentage ?? getCategoryMargin(sellerForm.category)} 
+                  disabled
+                  className="w-32 bg-muted"
+                />
+                <span className="text-sm text-muted-foreground">
+                  {sellerForm.margin_percentage != null ? "(Product override)" : "(Category default)"}
+                </span>
+              </div>
             </div>
 
             {/* Pricing with Auto-Calculation */}
