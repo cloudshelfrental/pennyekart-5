@@ -1,6 +1,7 @@
 import logo from "@/assets/logo.png";
-import { ShoppingCart, Menu, X, User, LogOut, Package, MapPin, Heart, Bell, ChevronDown, Wallet, UserPlus } from "lucide-react";
+import { ShoppingCart, Menu, X, User, LogOut, Package, MapPin, Heart, Bell, ChevronDown, Wallet, UserPlus, Crown, Download } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import DownloadAppDialog from "@/components/DownloadAppDialog";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
