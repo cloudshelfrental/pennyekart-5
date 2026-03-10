@@ -158,17 +158,8 @@ const SalesReportPage = () => {
   }, [filterLocalBody, localBodyMap]);
 
   // Get godown IDs for location filters
-  const godownIdsForLocation = useMemo(() => {
-    if (filterLocalBody !== "all" && filterWard !== "all") {
-      // Include godowns assigned to this specific ward AND godowns assigned to the entire local body
-      const fromWards = godownWards
-        .filter(gw => gw.local_body_id === filterLocalBody && gw.ward_number === Number(filterWard))
-        .map(gw => gw.godown_id);
-      const fromLB = godownLocalBodies
-        .filter(glb => glb.local_body_id === filterLocalBody)
-        .map(glb => glb.godown_id);
-      return [...new Set([...fromWards, ...fromLB])];
-    }
+  // Godown IDs assigned to the selected local body (all wards)
+  const godownIdsForLocalBody = useMemo(() => {
     if (filterLocalBody !== "all") {
       const fromWards = godownWards.filter(gw => gw.local_body_id === filterLocalBody).map(gw => gw.godown_id);
       const fromLB = godownLocalBodies.filter(glb => glb.local_body_id === filterLocalBody).map(glb => glb.godown_id);
@@ -181,56 +172,11 @@ const SalesReportPage = () => {
       return [...new Set([...fromWards, ...fromLB])];
     }
     return null;
-  }, [filterDistrict, filterLocalBody, filterWard, godownWards, godownLocalBodies, localBodies]);
+  }, [filterDistrict, filterLocalBody, godownWards, godownLocalBodies, localBodies]);
 
-  const filteredOrders = useMemo(() => {
-    return orders.filter(o => {
-      // Status filter
-      if (filterStatus !== "all" && o.status !== filterStatus) return false;
-
-      // Date filter
-      if (dateFrom && new Date(o.created_at) < dateFrom) return false;
-      if (dateTo) {
-        const end = new Date(dateTo);
-        end.setHours(23, 59, 59, 999);
-        if (new Date(o.created_at) > end) return false;
-      }
-
-      // Godown filter - also match seller orders via seller_godown_assignments
-      if (filterGodown !== "all") {
-        const matchesDirect = o.godown_id === filterGodown;
-        const matchesSellerGodown = o.seller_id && sellerGodownMap[o.seller_id]?.includes(filterGodown);
-        if (!matchesDirect && !matchesSellerGodown) return false;
-      }
-
-      // Location-based filter (district/panchayath/ward)
-      if (godownIdsForLocation !== null) {
-        const profile = o.user_id ? profileMap[o.user_id] : null;
-
-        // Check if order's godown matches location
-        const matchesGodown = o.godown_id && godownIdsForLocation.includes(o.godown_id);
-
-        // Check if seller's assigned godown matches location
-        const matchesSellerGodown = o.seller_id && sellerGodownMap[o.seller_id]?.some(gId => godownIdsForLocation.includes(gId));
-
-        // Check if customer's profile location matches
-        let matchesCustomerLocation = false;
-        if (profile) {
-          if (filterLocalBody !== "all") {
-            if (profile.local_body_id === filterLocalBody) {
-              if (filterWard !== "all") {
-                matchesCustomerLocation = profile.ward_number === Number(filterWard);
-              } else {
-                matchesCustomerLocation = true;
-              }
-            }
-          } else if (filterDistrict !== "all") {
-            const lb = profile.local_body_id ? localBodyMap[profile.local_body_id] : null;
-            matchesCustomerLocation = lb?.district_id === filterDistrict;
-          }
-        }
-
-        if (!matchesGodown && !matchesSellerGodown && !matchesCustomerLocation) return false;
+  const godownIdsForLocation = useMemo(() => {
+    return godownIdsForLocalBody;
+  }, [godownIdsForLocalBody]);
       }
 
       return true;
