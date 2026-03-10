@@ -612,13 +612,21 @@ const SellingPartnerDashboard = () => {
                   <div><Label>Description</Label><Textarea value={editForm.description} onChange={e => setEditForm({ ...editForm, description: e.target.value })} /></div>
                   <div className="grid grid-cols-3 gap-3">
                     <div><Label>Purchase Rate</Label><Input type="number" min="0" step="0.01" value={editForm.purchase_rate} onChange={e => setEditForm({ ...editForm, purchase_rate: e.target.value })} /></div>
-                    <div><Label>MRP</Label><Input type="number" min="0" step="0.01" value={editForm.mrp} onChange={e => { const m = e.target.value; const dr = parseFloat(editForm.discount_rate) || 0; setEditForm({ ...editForm, mrp: m, price: String((parseFloat(m) || 0) - dr) }); }} required /></div>
-                    <div><Label>Discount Rate</Label><Input type="number" min="0" step="0.01" value={editForm.discount_rate} onChange={e => { const dr = e.target.value; const m = parseFloat(editForm.mrp) || 0; setEditForm({ ...editForm, discount_rate: dr, price: String(m - (parseFloat(dr) || 0)) }); }} /></div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div><Label>Selling Price</Label><Input type="number" value={editForm.price} onChange={e => setEditForm({ ...editForm, price: e.target.value })} /></div>
+                    <div><Label>MRP</Label><Input type="number" min="0" step="0.01" value={editForm.mrp} onChange={e => setEditForm({ ...editForm, mrp: e.target.value })} required /></div>
                     <div><Label>Stock</Label><Input type="number" min="0" value={editForm.stock} onChange={e => setEditForm({ ...editForm, stock: e.target.value })} /></div>
                   </div>
+                  {(() => {
+                    const pr = parseFloat(editForm.purchase_rate) || 0;
+                    const m = parseFloat(editForm.mrp) || 0;
+                    const margin = getCategoryMargin(editForm.category);
+                    const { price, discount } = calcPriceFromMargin(pr, m, editForm.category);
+                    return (
+                      <div className="rounded-lg border bg-muted/30 p-3 text-sm space-y-1">
+                        <p>Category Margin: <span className="font-semibold text-primary">{margin}%</span></p>
+                        <p>Auto Price: <span className="font-semibold">₹{price.toFixed(2)}</span> | Discount: <span className="font-semibold">₹{discount.toFixed(2)}</span></p>
+                      </div>
+                    );
+                  })()}
                   <div>
                     <Label>Category</Label>
                     <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={editForm.category} onChange={e => setEditForm({ ...editForm, category: e.target.value })}>
