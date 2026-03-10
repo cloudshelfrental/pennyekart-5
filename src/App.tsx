@@ -88,6 +88,7 @@ const AppRoutes = () => {
       <Route path="/admin/settings" element={<ProtectedRoute requirePermission="read_products"><AppSettingsPage /></ProtectedRoute>} />
       <Route path="/admin/storage" element={<ProtectedRoute requireSuperAdmin><StorageConfigPage /></ProtectedRoute>} />
       <Route path="/admin/reports" element={<ProtectedRoute requirePermission="read_orders"><ReportsPage /></ProtectedRoute>} />
+      <Route path="/admin/sales-report" element={<ProtectedRoute requirePermission="read_orders"><SalesReportPage /></ProtectedRoute>} />
       <Route path="/admin/wallets" element={<ProtectedRoute requirePermission="read_users"><WalletManagementPage /></ProtectedRoute>} />
       <Route path="/admin/penny-prime" element={<ProtectedRoute requirePermission="read_orders"><PennyPrimePage /></ProtectedRoute>} />
       <Route path="/admin/platform-margin" element={<ProtectedRoute requirePermission="read_products"><PlatformMarginPage /></ProtectedRoute>} />
