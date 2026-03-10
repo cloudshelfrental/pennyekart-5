@@ -177,6 +177,53 @@ const SalesReportPage = () => {
   const godownIdsForLocation = useMemo(() => {
     return godownIdsForLocalBody;
   }, [godownIdsForLocalBody]);
+
+  const filteredOrders = useMemo(() => {
+    return orders.filter(o => {
+      // Status filter
+      if (filterStatus !== "all" && o.status !== filterStatus) return false;
+
+      // Date filter
+      if (dateFrom && new Date(o.created_at) < dateFrom) return false;
+      if (dateTo) {
+        const end = new Date(dateTo);
+        end.setHours(23, 59, 59, 999);
+        if (new Date(o.created_at) > end) return false;
+      }
+
+      // Godown filter - also match seller orders via seller_godown_assignments
+      if (filterGodown !== "all") {
+        const matchesDirect = o.godown_id === filterGodown;
+        const matchesSellerGodown = o.seller_id && sellerGodownMap[o.seller_id]?.includes(filterGodown);
+        if (!matchesDirect && !matchesSellerGodown) return false;
+      }
+
+      // Location-based filter (district/panchayath/ward)
+      if (godownIdsForLocation !== null) {
+        const profile = o.user_id ? profileMap[o.user_id] : null;
+
+        // When ward filter is active, primarily match by customer profile ward
+        if (filterLocalBody !== "all" && filterWard !== "all") {
+          // Customer must be in this exact local body + ward
+          const customerInWard = profile && profile.local_body_id === filterLocalBody && profile.ward_number === Number(filterWard);
+          if (!customerInWard) return false;
+        } else {
+          // Check if order's godown matches location
+          const matchesGodown = o.godown_id && godownIdsForLocation.includes(o.godown_id);
+          // Check if seller's assigned godown matches location
+          const matchesSellerGodown = o.seller_id && sellerGodownMap[o.seller_id]?.some(gId => godownIdsForLocation.includes(gId));
+          // Check if customer's profile location matches
+          let matchesCustomerLocation = false;
+          if (profile) {
+            if (filterLocalBody !== "all") {
+              matchesCustomerLocation = profile.local_body_id === filterLocalBody;
+            } else if (filterDistrict !== "all") {
+              const lb = profile.local_body_id ? localBodyMap[profile.local_body_id] : null;
+              matchesCustomerLocation = lb?.district_id === filterDistrict;
+            }
+          }
+          if (!matchesGodown && !matchesSellerGodown && !matchesCustomerLocation) return false;
+        }
       }
 
       return true;
