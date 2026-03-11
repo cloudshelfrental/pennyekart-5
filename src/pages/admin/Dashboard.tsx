@@ -30,25 +30,25 @@ const Dashboard = () => {
       const keys: string[] = [];
 
       if (canSee("read_users")) {
-        queries.push(supabase.from("profiles").select("id", { count: "exact", head: true }));
+        queries.push(supabase.from("profiles").select("id", { count: "exact", head: true }).then());
         keys.push("users");
-        queries.push(supabase.from("profiles").select("id", { count: "exact", head: true }).eq("user_type", "delivery_staff"));
+        queries.push(supabase.from("profiles").select("id", { count: "exact", head: true }).eq("user_type", "delivery_staff").then());
         keys.push("deliveryStaff");
-        queries.push(supabase.from("profiles").select("id", { count: "exact", head: true }).eq("user_type", "selling_partner"));
+        queries.push(supabase.from("profiles").select("id", { count: "exact", head: true }).eq("user_type", "selling_partner").then());
         keys.push("sellers");
       }
       if (canSee("read_products")) {
-        queries.push(supabase.from("products").select("id", { count: "exact", head: true }));
+        queries.push(supabase.from("products").select("id", { count: "exact", head: true }).then());
         keys.push("products");
-        queries.push(supabase.from("seller_products").select("id", { count: "exact", head: true }));
+        queries.push(supabase.from("seller_products").select("id", { count: "exact", head: true }).then());
         keys.push("sellerProducts");
       }
       if (canSee("read_orders")) {
-        queries.push(supabase.from("orders").select("id", { count: "exact", head: true }));
+        queries.push(supabase.from("orders").select("id", { count: "exact", head: true }).then());
         keys.push("orders");
       }
       if (canSee("read_banners")) {
-        queries.push(supabase.from("banners").select("id", { count: "exact", head: true }));
+        queries.push(supabase.from("banners").select("id", { count: "exact", head: true }).then());
         keys.push("banners");
       }
 
