@@ -60,6 +60,8 @@ const UsersPage = () => {
   const [users, setUsers] = useState<Profile[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
   const [filterType, setFilterType] = useState("all");
+  const [filterRole, setFilterRole] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
   const { isSuperAdmin } = usePermissions();
   const { toast } = useToast();
 
