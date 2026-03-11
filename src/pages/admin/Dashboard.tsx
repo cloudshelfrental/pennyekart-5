@@ -26,7 +26,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     const fetchStats = async () => {
-      const queries: Promise<any>[] = [];
+      const queries: PromiseLike<any>[] = [];
       const keys: string[] = [];
 
       if (canSee("read_users")) {
