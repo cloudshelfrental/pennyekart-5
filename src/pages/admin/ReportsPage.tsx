@@ -19,7 +19,7 @@ import {
 } from "recharts";
 import {
   TrendingUp, TrendingDown, ShoppingCart, Package, Users, Wallet,
-  Store, Truck, BarChart3, AlertTriangle, CheckCircle
+  Store, Truck, BarChart3, AlertTriangle, CheckCircle, Search
 } from "lucide-react";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
