@@ -640,7 +640,7 @@ const CustomerList = ({ customers, orderSummaries, walletSummaries, onRefresh }:
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.map((c, i) => {
+            {paginatedCustomers.map((c, i) => {
               const o = orderSummaries?.get(c.user_id);
               const w = walletSummaries?.get(c.user_id);
               const sh = searchHistories.get(c.user_id);
