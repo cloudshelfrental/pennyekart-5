@@ -104,6 +104,8 @@ const CustomerList = ({ customers, orderSummaries, walletSummaries, onRefresh }:
     }
   };
   const [mobileSearch, setMobileSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
 
   // Fetch search histories for all customers
   useEffect(() => {
