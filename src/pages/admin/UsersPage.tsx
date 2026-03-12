@@ -62,6 +62,8 @@ const UsersPage = () => {
   const [filterType, setFilterType] = useState("all");
   const [filterRole, setFilterRole] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
   const { isSuperAdmin } = usePermissions();
   const { toast } = useToast();
 
