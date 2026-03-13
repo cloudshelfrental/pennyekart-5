@@ -86,7 +86,7 @@ const PennyPrime = () => {
 
     const productIds = [...new Set(rawCoupons.map(c => c.product_id).filter(Boolean))];
     const { data: sellerProds } = productIds.length > 0
-      ? await supabase.from("seller_products").select("id, name, price, mrp, image_url, description").in("id", productIds)
+      ? await supabase.from("seller_products").select("id, name, price, mrp, image_url, description, category").in("id", productIds)
       : { data: [] };
     const { data: regularProds } = productIds.length > 0
       ? await supabase.from("products").select("id, name, price, mrp, image_url, description").in("id", productIds)
@@ -221,6 +221,7 @@ const PennyPrime = () => {
       price: p.price,
       mrp: p.mrp,
       image: p.image_url || "/placeholder.svg",
+      category: (p as any).category || undefined,
       source: "seller_product",
       seller_id: coupon.seller_id,
     });

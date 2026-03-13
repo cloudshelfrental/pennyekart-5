@@ -27,6 +27,7 @@ interface FlashProductItem {
   product_name?: string;
   product_image?: string | null;
   product_description?: string | null;
+  product_category?: string | null;
   source: "product" | "seller_product";
   actual_product_id: string;
 }
@@ -111,7 +112,7 @@ const FlashSaleDetail = () => {
         if (item.product_id) {
           const { data: p } = await supabase
             .from("products")
-            .select("name, image_url, description")
+            .select("name, image_url, description, category")
             .eq("id", item.product_id)
             .single();
           if (p) {
@@ -120,6 +121,7 @@ const FlashSaleDetail = () => {
               product_name: p.name,
               product_image: p.image_url,
               product_description: p.description,
+              product_category: (p as any).category || null,
               source: "product",
               actual_product_id: item.product_id,
             });
@@ -127,7 +129,7 @@ const FlashSaleDetail = () => {
         } else if (item.seller_product_id) {
           const { data: p } = await supabase
             .from("seller_products")
-            .select("name, image_url, description")
+            .select("name, image_url, description, category")
             .eq("id", item.seller_product_id)
             .single();
           if (p) {
@@ -136,6 +138,7 @@ const FlashSaleDetail = () => {
               product_name: p.name,
               product_image: p.image_url,
               product_description: p.description,
+              product_category: (p as any).category || null,
               source: "seller_product",
               actual_product_id: item.seller_product_id,
             });
@@ -155,6 +158,7 @@ const FlashSaleDetail = () => {
       price: item.flash_price,
       mrp: item.flash_mrp,
       image: item.product_image || "",
+      category: item.product_category || undefined,
       source: item.source,
     });
     toast({ title: "Added to cart", description: `${item.product_name} added at flash sale price!` });
