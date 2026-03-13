@@ -7,6 +7,7 @@ export interface CartItem {
   mrp: number;
   image: string;
   quantity: number;
+  category?: string;
   source?: "product" | "seller_product";
   seller_id?: string;
   coming_soon?: boolean;

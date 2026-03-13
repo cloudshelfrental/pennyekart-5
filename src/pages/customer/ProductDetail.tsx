@@ -83,6 +83,7 @@ const ProductDetail = () => {
       price: displayPrice,
       mrp: displayMrp,
       image: product.image_url || "",
+      category: product.category || undefined,
       source: productSource,
       seller_id: productSellerId,
     });
@@ -97,6 +98,7 @@ const ProductDetail = () => {
       price: displayPrice,
       mrp: displayMrp,
       image: product.image_url || "",
+      category: product.category || undefined,
       source: productSource,
       seller_id: productSellerId,
     });
