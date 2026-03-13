@@ -27,6 +27,7 @@ interface FlashProductItem {
   product_name?: string;
   product_image?: string | null;
   product_description?: string | null;
+  product_category?: string | null;
   source: "product" | "seller_product";
   actual_product_id: string;
 }
