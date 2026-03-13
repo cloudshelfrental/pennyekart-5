@@ -543,6 +543,10 @@ const DeliveryManagementPage = () => {
           </div>
         </DialogContent>
       </Dialog>
+      {/* Delivery Charge Rules Section */}
+      <div className="mt-8 border-t border-border pt-6">
+        <DeliveryChargeRules />
+      </div>
     </AdminLayout>
   );
 };
