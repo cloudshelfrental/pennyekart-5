@@ -44,7 +44,7 @@ const fetchPopupSettings = async (): Promise<PopupSettings> => {
 
 const OfferFlashPopup = () => {
   const [open, setOpen] = useState(false);
-  const [current, setCurrent] = useState(0);
+  const [current, setCurrent] = useState(-1);
   const [countdown, setCountdown] = useState<number | null>(null);
   const navigate = useNavigate();
   const autoCloseRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -62,21 +62,26 @@ const OfferFlashPopup = () => {
     staleTime: 5 * 60 * 1000,
   });
 
+  // Pick a random starting screen
+  useEffect(() => {
+    if (screens.length > 0 && current === -1) {
+      setCurrent(Math.floor(Math.random() * screens.length));
+    }
+  }, [screens.length, current]);
+
   // Auto-show logic based on settings
   useEffect(() => {
-    if (screens.length === 0 || !popupSettings) return;
+    if (screens.length === 0 || !popupSettings || current === -1) return;
 
     const delaySec = popupSettings.open_delay_seconds;
 
     if (popupSettings.open_trigger === "countdown") {
-      // Show countdown first, then open
       setCountdown(delaySec);
     } else {
-      // refresh mode: just delay then open
       const timer = setTimeout(() => setOpen(true), delaySec * 1000);
       return () => clearTimeout(timer);
     }
-  }, [screens.length, popupSettings]);
+  }, [screens.length, popupSettings, current]);
 
   // Countdown ticker
   useEffect(() => {
@@ -113,7 +118,7 @@ const OfferFlashPopup = () => {
     }
   };
 
-  if (screens.length === 0) return null;
+  if (screens.length === 0 || current === -1) return null;
 
   const screen = screens[current];
   const hasMultiple = screens.length > 1;
@@ -130,7 +135,7 @@ const OfferFlashPopup = () => {
       {/* Floating button to reopen */}
       {!open && countdown === null && (
         <button
-          onClick={() => { setCurrent(0); setOpen(true); }}
+          onClick={() => { setCurrent(Math.floor(Math.random() * screens.length)); setOpen(true); }}
           className="fixed bottom-20 right-3 z-50 md:bottom-6 md:right-6 flex items-center justify-center h-12 w-12 rounded-full bg-primary text-primary-foreground shadow-lg animate-bounce hover:animate-none transition-all"
           aria-label="View offers"
         >
