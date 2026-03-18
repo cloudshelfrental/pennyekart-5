@@ -54,6 +54,7 @@ const fetchAreaProducts = async (localBodyId: string, wardNumber: number): Promi
       .in("area_godown_id", godownArr)
       .eq("is_active", true)
       .eq("is_approved", true)
+      .eq("coming_soon", false)
       .gt("stock", 0)
       .limit(30),
   ]);
