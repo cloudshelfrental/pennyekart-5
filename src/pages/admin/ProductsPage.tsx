@@ -132,7 +132,7 @@ const ProductsPage = () => {
 
   // Handle margin change - auto-calculate selling price
   const handleMarginChange = (marginPercentage: number, currentForm: typeof form, setFormFn: typeof setForm) => {
-    const newPrice = calculateSellingPrice(currentForm.purchase_rate, marginPercentage, currentForm.round_off_price);
+    const newPrice = calculateSellingPrice(currentForm.purchase_rate, marginPercentage, currentForm.round_off_price, currentForm.manual_round_off);
     const newDiscount = calculateDiscount(currentForm.mrp, newPrice);
     setFormFn({ ...currentForm, margin_percentage: marginPercentage, price: newPrice, discount_rate: newDiscount });
   };
