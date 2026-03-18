@@ -79,6 +79,7 @@ const emptyForm = {
   area_godown_id: "", image_url: "", image_url_2: "", image_url_3: "",
   purchase_rate: "", mrp: "", discount_rate: "", is_featured: false, video_url: "",
   wallet_points: "", featured_discount_type: "amount" as string, featured_discount_value: "",
+  round_off_price: true,
 };
 
 const SellingPartnerDashboard = () => {
@@ -317,11 +318,12 @@ const SellingPartnerDashboard = () => {
     return (cat as any)?.margin_percentage ?? 0;
   };
 
-  const calcPriceFromMargin = (purchaseRate: number, mrp: number, categoryName: string) => {
+  const calcPriceFromMargin = (purchaseRate: number, mrp: number, categoryName: string, roundOff = true) => {
     const margin = getCategoryMargin(categoryName);
-    const price = purchaseRate > 0 && margin > 0
-      ? Math.round(purchaseRate * (1 + margin / 100) * 100) / 100
+    const raw = purchaseRate > 0 && margin > 0
+      ? purchaseRate * (1 + margin / 100)
       : mrp;
+    const price = roundOff ? Math.round(raw) : Math.round(raw * 100) / 100;
     const discount = Math.max(0, mrp - price);
     return { price, discount };
   };
@@ -331,7 +333,7 @@ const SellingPartnerDashboard = () => {
     if (!user) return;
     const mrp = parseFloat(form.mrp) || 0;
     const purchaseRate = parseFloat(form.purchase_rate) || 0;
-    const { price, discount } = calcPriceFromMargin(purchaseRate, mrp, form.category);
+    const { price, discount } = calcPriceFromMargin(purchaseRate, mrp, form.category, form.round_off_price);
     const godownId = form.area_godown_id || (assignedGodowns.length === 1 ? assignedGodowns[0].id : null);
     // Auto-disable featured if no discount value
     const featuredDiscountVal = parseFloat(form.featured_discount_value) || 0;
@@ -364,6 +366,7 @@ const SellingPartnerDashboard = () => {
   };
 
   const openEdit = (p: SellerProduct) => {
+    const isRounded = p.price === Math.round(p.price);
     setEditProduct(p);
     setEditForm({
       name: p.name, description: p.description ?? "", price: String(p.price),
@@ -376,6 +379,7 @@ const SellingPartnerDashboard = () => {
       wallet_points: String((p as any).wallet_points ?? 0),
       featured_discount_type: (p as any).featured_discount_type ?? "amount",
       featured_discount_value: String((p as any).featured_discount_value ?? 0),
+      round_off_price: isRounded,
     });
     setEditDialogOpen(true);
   };
@@ -385,7 +389,7 @@ const SellingPartnerDashboard = () => {
     if (!editProduct) return;
     const mrp = parseFloat(editForm.mrp) || 0;
     const purchaseRate = parseFloat(editForm.purchase_rate) || 0;
-    const { price, discount } = calcPriceFromMargin(purchaseRate, mrp, editForm.category);
+    const { price, discount } = calcPriceFromMargin(purchaseRate, mrp, editForm.category, editForm.round_off_price);
     // Auto-disable featured if no discount value
     const featuredDiscountVal = parseFloat(editForm.featured_discount_value) || 0;
     const isFeatured = editForm.is_featured && featuredDiscountVal > 0;
@@ -507,10 +511,16 @@ const SellingPartnerDashboard = () => {
                       const pr = parseFloat(form.purchase_rate) || 0;
                       const m = parseFloat(form.mrp) || 0;
                       const margin = getCategoryMargin(form.category);
-                      const { price, discount } = calcPriceFromMargin(pr, m, form.category);
+                      const { price, discount } = calcPriceFromMargin(pr, m, form.category, form.round_off_price);
                       return (
                         <div className="rounded-lg border bg-muted/30 p-3 text-sm space-y-1">
-                          <p>Category Margin: <span className="font-semibold text-primary">{margin}%</span></p>
+                          <div className="flex items-center justify-between">
+                            <p>Category Margin: <span className="font-semibold text-primary">{margin}%</span></p>
+                            <div className="flex items-center gap-1.5">
+                              <Switch checked={form.round_off_price} onCheckedChange={(v) => setForm({ ...form, round_off_price: v })} className="scale-75" />
+                              <Label className="text-xs text-muted-foreground cursor-pointer" onClick={() => setForm({ ...form, round_off_price: !form.round_off_price })}>Round off</Label>
+                            </div>
+                          </div>
                           <p>Auto Price: <span className="font-semibold">₹{price.toFixed(2)}</span> | Discount: <span className="font-semibold">₹{discount.toFixed(2)}</span></p>
                         </div>
                       );
@@ -645,10 +655,16 @@ const SellingPartnerDashboard = () => {
                     const pr = parseFloat(editForm.purchase_rate) || 0;
                     const m = parseFloat(editForm.mrp) || 0;
                     const margin = getCategoryMargin(editForm.category);
-                    const { price, discount } = calcPriceFromMargin(pr, m, editForm.category);
+                    const { price, discount } = calcPriceFromMargin(pr, m, editForm.category, editForm.round_off_price);
                     return (
                       <div className="rounded-lg border bg-muted/30 p-3 text-sm space-y-1">
-                        <p>Category Margin: <span className="font-semibold text-primary">{margin}%</span></p>
+                        <div className="flex items-center justify-between">
+                          <p>Category Margin: <span className="font-semibold text-primary">{margin}%</span></p>
+                          <div className="flex items-center gap-1.5">
+                            <Switch checked={editForm.round_off_price} onCheckedChange={(v) => setEditForm({ ...editForm, round_off_price: v })} className="scale-75" />
+                            <Label className="text-xs text-muted-foreground cursor-pointer" onClick={() => setEditForm({ ...editForm, round_off_price: !editForm.round_off_price })}>Round off</Label>
+                          </div>
+                        </div>
                         <p>Auto Price: <span className="font-semibold">₹{price.toFixed(2)}</span> | Discount: <span className="font-semibold">₹{discount.toFixed(2)}</span></p>
                       </div>
                     );

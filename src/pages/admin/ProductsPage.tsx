@@ -72,7 +72,7 @@ const ProductsPage = () => {
   const [open, setOpen] = useState(false);
   const [sellerEditOpen, setSellerEditOpen] = useState(false);
   const [sellerEditId, setSellerEditId] = useState<string | null>(null);
-  const [sellerForm, setSellerForm] = useState({ name: "", description: "", price: 0, mrp: 0, purchase_rate: 0, discount_rate: 0, stock: 0, category: "", is_active: true, is_approved: false, is_featured: false, coming_soon: false, image_url: "", image_url_2: "", image_url_3: "", video_url: "", wallet_points: 0, margin_percentage: null as number | null, featured_discount_type: "amount", featured_discount_value: 0 });
+  const [sellerForm, setSellerForm] = useState({ name: "", description: "", price: 0, mrp: 0, purchase_rate: 0, discount_rate: 0, stock: 0, category: "", is_active: true, is_approved: false, is_featured: false, coming_soon: false, image_url: "", image_url_2: "", image_url_3: "", video_url: "", wallet_points: 0, margin_percentage: null as number | null, featured_discount_type: "amount", featured_discount_value: 0, round_off_price: true });
   const [ownCategoryFilter, setOwnCategoryFilter] = useState("");
   const [sellerCategoryFilter, setSellerCategoryFilter] = useState("");
   const { hasPermission } = usePermissions();
@@ -223,6 +223,7 @@ const ProductsPage = () => {
   };
 
   const openSellerEdit = (p: SellerProduct) => {
+    const isRounded = p.price === Math.round(p.price);
     setSellerForm({
       name: p.name, description: p.description ?? "", price: p.price, mrp: p.mrp,
       purchase_rate: p.purchase_rate, discount_rate: p.discount_rate, stock: p.stock,
@@ -234,6 +235,7 @@ const ProductsPage = () => {
       margin_percentage: p.margin_percentage ?? null,
       featured_discount_type: (p as any).featured_discount_type ?? "amount",
       featured_discount_value: (p as any).featured_discount_value ?? 0,
+      round_off_price: isRounded,
     });
     setSellerEditId(p.id);
     setSellerEditOpen(true);
@@ -649,9 +651,15 @@ const ProductsPage = () => {
 
             {/* Pricing with Auto-Calculation */}
             <div className="rounded-lg border p-3 space-y-3">
-              <div className="flex items-center gap-2 text-sm font-medium">
-                <Calculator className="h-4 w-4" />
-                Pricing (Auto-calculated)
+              <div className="flex items-center justify-between text-sm font-medium">
+                <div className="flex items-center gap-2">
+                  <Calculator className="h-4 w-4" />
+                  Pricing (Auto-calculated)
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Switch checked={sellerForm.round_off_price} onCheckedChange={(v) => handleRoundOffToggle(v, sellerForm as any, setSellerForm as any)} className="scale-75" />
+                  <Label className="text-xs text-muted-foreground cursor-pointer" onClick={() => handleRoundOffToggle(!sellerForm.round_off_price, sellerForm as any, setSellerForm as any)}>Round off</Label>
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
