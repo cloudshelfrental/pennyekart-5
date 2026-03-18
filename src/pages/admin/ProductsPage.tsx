@@ -690,10 +690,14 @@ const ProductsPage = () => {
                   <Input type="number" value={sellerForm.price} onChange={(e) => handlePriceChange(+e.target.value, sellerForm as any, setSellerForm as any)} />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 <div>
                   <Label className="text-xs">MRP</Label>
                   <Input type="number" value={sellerForm.mrp} onChange={(e) => handleMrpChange(+e.target.value, sellerForm as any, setSellerForm as any)} />
+                </div>
+                <div>
+                  <Label className="text-xs">Manual Round Off (±₹)</Label>
+                  <Input type="number" value={sellerForm.manual_round_off} onChange={(e) => handleManualRoundOffChange(+e.target.value, sellerForm as any, setSellerForm as any)} placeholder="0" />
                 </div>
                 <div>
                   <Label className="text-xs">Discount Amount (auto)</Label>
