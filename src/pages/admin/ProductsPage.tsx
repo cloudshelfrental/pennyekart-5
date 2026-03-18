@@ -249,7 +249,7 @@ const ProductsPage = () => {
       featured_discount_type: (p as any).featured_discount_type ?? "amount",
       featured_discount_value: (p as any).featured_discount_value ?? 0,
       round_off_price: isRounded,
-    });
+      manual_round_off: 0,
     setSellerEditId(p.id);
     setSellerEditOpen(true);
   };
