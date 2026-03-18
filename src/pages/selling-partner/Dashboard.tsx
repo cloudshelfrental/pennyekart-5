@@ -511,10 +511,16 @@ const SellingPartnerDashboard = () => {
                       const pr = parseFloat(form.purchase_rate) || 0;
                       const m = parseFloat(form.mrp) || 0;
                       const margin = getCategoryMargin(form.category);
-                      const { price, discount } = calcPriceFromMargin(pr, m, form.category);
+                      const { price, discount } = calcPriceFromMargin(pr, m, form.category, form.round_off_price);
                       return (
                         <div className="rounded-lg border bg-muted/30 p-3 text-sm space-y-1">
-                          <p>Category Margin: <span className="font-semibold text-primary">{margin}%</span></p>
+                          <div className="flex items-center justify-between">
+                            <p>Category Margin: <span className="font-semibold text-primary">{margin}%</span></p>
+                            <div className="flex items-center gap-1.5">
+                              <Switch checked={form.round_off_price} onCheckedChange={(v) => setForm({ ...form, round_off_price: v })} className="scale-75" />
+                              <Label className="text-xs text-muted-foreground cursor-pointer" onClick={() => setForm({ ...form, round_off_price: !form.round_off_price })}>Round off</Label>
+                            </div>
+                          </div>
                           <p>Auto Price: <span className="font-semibold">₹{price.toFixed(2)}</span> | Discount: <span className="font-semibold">₹{discount.toFixed(2)}</span></p>
                         </div>
                       );
