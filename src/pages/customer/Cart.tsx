@@ -80,7 +80,7 @@ const Cart = () => {
     }
   }, [user]);
 
-  const totalMrp = items.reduce((s, i) => s + i.mrp * i.quantity, 0);
+  const totalMrp = items.reduce((s, i) => s + Math.max(i.mrp, i.price) * i.quantity, 0);
   const totalDiscount = totalMrp - totalPrice;
   const platformFee = items.length > 0 ? 7 : 0;
   const couponDiscount = appliedCoupon?.discount ?? 0;
