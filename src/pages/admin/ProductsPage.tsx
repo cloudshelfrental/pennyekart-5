@@ -339,7 +339,7 @@ const ProductsPage = () => {
                 } else {
                   // Reset to category margin
                   const catMargin = getCategoryMargin(form.category);
-                  const newPrice = calculateSellingPrice(form.purchase_rate, catMargin);
+                  const newPrice = calculateSellingPrice(form.purchase_rate, catMargin, form.round_off_price);
                   setForm({ ...form, margin_percentage: null, price: newPrice, discount_rate: calculateDiscount(form.mrp, newPrice) });
                 }
               }}
