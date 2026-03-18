@@ -22,12 +22,15 @@ const fetchCategoryProducts = async (categoryName: string): Promise<CategoryProd
       .from("products")
       .select("id, name, price, mrp, image_url, coming_soon, wallet_points, category, section")
       .eq("is_active", true)
+      .eq("coming_soon", false)
       .or(`category.eq.${categoryName},section.eq.${categoryName}`),
     supabase
       .from("seller_products")
-      .select("id, name, price, mrp, image_url, coming_soon, wallet_points, category")
+      .select("id, name, price, mrp, image_url, coming_soon, wallet_points, category, stock")
       .eq("is_active", true)
       .eq("is_approved", true)
+      .eq("coming_soon", false)
+      .gt("stock", 0)
       .eq("category", categoryName),
   ]);
 
