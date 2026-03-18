@@ -389,7 +389,7 @@ const SellingPartnerDashboard = () => {
     if (!editProduct) return;
     const mrp = parseFloat(editForm.mrp) || 0;
     const purchaseRate = parseFloat(editForm.purchase_rate) || 0;
-    const { price, discount } = calcPriceFromMargin(purchaseRate, mrp, editForm.category);
+    const { price, discount } = calcPriceFromMargin(purchaseRate, mrp, editForm.category, editForm.round_off_price);
     // Auto-disable featured if no discount value
     const featuredDiscountVal = parseFloat(editForm.featured_discount_value) || 0;
     const isFeatured = editForm.is_featured && featuredDiscountVal > 0;
