@@ -81,6 +81,27 @@ const Cart = () => {
     }
   }, [user]);
 
+  // Auto-apply coupon from URL param (e.g. /cart?coupon=CODE)
+  const couponAppliedFromUrl = useRef(false);
+  useEffect(() => {
+    const urlCoupon = searchParams.get("coupon");
+    if (urlCoupon && !couponAppliedFromUrl.current && !appliedCoupon && items.length > 0) {
+      couponAppliedFromUrl.current = true;
+      setCouponCode(urlCoupon.toUpperCase());
+      searchParams.delete("coupon");
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, appliedCoupon, items]);
+
+  // Auto-trigger apply when couponCode is set from URL
+  const prevCouponCode = useRef("");
+  useEffect(() => {
+    if (couponAppliedFromUrl.current && couponCode && couponCode !== prevCouponCode.current && !appliedCoupon && !couponLoading) {
+      prevCouponCode.current = couponCode;
+      handleApplyCouponRef.current?.();
+    }
+  }, [couponCode, appliedCoupon, couponLoading]);
+
   const totalMrp = items.reduce((s, i) => s + Math.max(i.mrp, i.price) * i.quantity, 0);
   const totalDiscount = totalMrp - totalPrice;
   const platformFee = items.length > 0 ? 7 : 0;
