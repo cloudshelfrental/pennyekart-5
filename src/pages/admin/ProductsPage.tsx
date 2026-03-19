@@ -77,6 +77,8 @@ const ProductsPage = () => {
   const [sellerCategoryFilter, setSellerCategoryFilter] = useState("");
   const [ownSearch, setOwnSearch] = useState("");
   const [sellerSearch, setSellerSearch] = useState("");
+  const [detailProduct, setDetailProduct] = useState<(Product | SellerProduct) | null>(null);
+  const [detailType, setDetailType] = useState<"own" | "seller">("own");
   const { hasPermission } = usePermissions();
   const { user } = useAuth();
   const { toast } = useToast();
