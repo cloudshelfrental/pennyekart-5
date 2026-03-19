@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Star, ArrowLeft, ChevronDown, ChevronUp, Play, Clock, Building2, MapPin, Phone, Mail, Share2, Coins } from "lucide-react";
+import { Star, ArrowLeft, ChevronDown, ChevronUp, Play, Clock, Building2, MapPin, Phone, Mail, Share2, Coins, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ProductRow from "@/components/ProductRow";
 import { useCart } from "@/hooks/useCart";
@@ -46,6 +46,8 @@ const getYoutubeEmbedUrl = (url: string, autoplay = false) => {
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const couponFromUrl = searchParams.get("coupon") || "";
   const [product, setProduct] = useState<ProductData | null>(null);
   const [similarProducts, setSimilarProducts] = useState<ProductData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -87,7 +89,12 @@ const ProductDetail = () => {
       source: productSource,
       seller_id: productSellerId,
     });
-    toast({ title: "Added to cart", description: `${product.name} added to your cart.` });
+    toast({
+      title: "Added to cart",
+      description: couponFromUrl
+        ? `${product.name} added. Coupon "${couponFromUrl}" will be auto-applied at checkout.`
+        : `${product.name} added to your cart.`,
+    });
   };
 
   const handleBuyNow = () => {
@@ -102,7 +109,8 @@ const ProductDetail = () => {
       source: productSource,
       seller_id: productSellerId,
     });
-    navigate("/cart");
+    const cartUrl = couponFromUrl ? `/cart?coupon=${encodeURIComponent(couponFromUrl)}` : "/cart";
+    navigate(cartUrl);
   };
 
   // Build slides: images + video
@@ -326,6 +334,14 @@ const ProductDetail = () => {
       </header>
 
       <main>
+        {couponFromUrl && (
+          <div className="flex items-center gap-2 bg-primary/10 border border-primary/20 px-4 py-2 text-sm">
+            <Tag className="h-4 w-4 text-primary shrink-0" />
+            <span className="text-foreground">
+              Coupon <strong className="font-mono text-primary">{couponFromUrl}</strong> will be auto-applied at checkout
+            </span>
+          </div>
+        )}
         {/* Auto-sliding Image/Video Gallery */}
         <div className="flex flex-col md:flex-row">
           <div className="relative w-full md:w-1/2">
